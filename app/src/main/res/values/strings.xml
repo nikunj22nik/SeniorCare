@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">SeniorCare</string>
+    <string name="feature_provider"><font color="#000000">Featured</font> <font color="#EA5B60">Providers</font></string>
+    <string name="featured_facilities"><font color="#000000">Featured</font> <font color="#EA5B60">Facilities</font></string>
+    <string name="explore_facilities"><font color="#000000">Explore</font> <font color="#EA5B60">Facilities</font></string>
+    <string name="compare_facilty"><font color="#000000">Compare</font> <font color="#EA5B60">Facility</font></string>
+    <string name="name_of_society">Name Of Society</string>
+    <string name="provider_information">Provider Information</string>
+    <string name="floor">Floor</string>
+    <string name="status">Status</string>
+    <string name="furnished_status">Furnished Status</string>
+    <string name="year_built">Year Built</string>
+    <string name="garage">Garage</string>
+    <string name="overview">Overview</string>
+    <string name="amenities">Amenities</string>
+    <string name="saved_featured_facilities"><font color="#000000">Saved Featured</font> <font color="#EA5B60">Facilities</font></string>
+    <string name="_under_line_fetaure_fac"><u>Featured Facilities</u></string>
+    <string name="request_to_delete_account">Request to delete account</string>
+    <string name="request_to_closure_of_your_account">Request to closure of your account</string>
+    <string name="call_us_on">call us on</string>
+    <string name="mail_us">Mail Us</string>
+    <string name="please_login_to_access_the_provider">Please Login to access the Provider</string>
+    <string name="please_Subscription">You do not have enough credits.\n Please purchase a subscription plan\n to access more provider information.</string>
+    <string name="login_now">Login Now</string>
+    <string name="subscription">Subscription plan </string>
+    <string name="filter">Filter</string>
+    <string name="type">Type</string>
+    <string name="facility">Facility</string>
+    <string name="price_range_from_5000_to_100000">Price range from</string>
+    <string name="rooms">Rooms:</string>
+    <string name="city">city:</string>
+    <string name="to">to</string>
+    <string name="submit">Submit</string>
+</resources>
