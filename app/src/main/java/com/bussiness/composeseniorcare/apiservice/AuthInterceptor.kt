@@ -2,7 +2,7 @@ package com.bussiness.composeseniorcare.apiservice
 
 import android.content.Context
 import android.content.Intent
-import com.bussiness.composeseniorcare.session.SessionManager
+import com.bussiness.composeseniorcare.util.SessionManager
 
 import okhttp3.Interceptor
 import okhttp3.Response
