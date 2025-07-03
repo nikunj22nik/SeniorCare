@@ -13,9 +13,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,6 +28,7 @@ import com.bussiness.composeseniorcare.R
 import com.bussiness.composeseniorcare.data.model.Facility
 import com.bussiness.composeseniorcare.navigation.Routes
 import com.bussiness.composeseniorcare.ui.theme.Purple
+import com.bussiness.composeseniorcare.ui.theme.Redish
 
 @Composable
 fun SavedFacilities(
@@ -59,7 +63,14 @@ fun SavedFacilities(
                     .padding(horizontal = 20.dp, vertical = 16.dp)
             ) {
                 Text(
-                    text = stringResource(id = R.string.saved_featured_facilities),
+                    text = buildAnnotatedString {
+                        withStyle(style = SpanStyle(color = Color.Black, fontWeight = FontWeight.Bold)) {
+                            append("Saved Featured")
+                        }
+                        withStyle(style = SpanStyle(color = Redish, fontWeight = FontWeight.Bold)) {
+                            append(" Facilities")
+                        }
+                    },
                     fontSize = 24.sp,
                     fontFamily = FontFamily(Font(R.font.poppins)),
                     fontWeight = FontWeight.Bold,

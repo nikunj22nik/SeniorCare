@@ -132,7 +132,7 @@ fun FacilityListing(navController: NavHostController, onOpenDrawer: () -> Unit,t
                 items(facilitiesList) { facility ->
                     FacilityCard(
                         facility = facility,
-                        showRating = true,
+                        showRating = false,
                         showBookmark = true,
                         onBookmarkClick = { },
                         onCardClick = {

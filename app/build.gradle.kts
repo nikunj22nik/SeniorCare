@@ -114,6 +114,9 @@ dependencies {
     // Network monitoring
     implementation (libs.androidx.lifecycle.runtime.ktx.v291)
     implementation (libs.androidx.runtime.livedata)
+    //
+    implementation (libs.lottie.compose)
+
 
 
 

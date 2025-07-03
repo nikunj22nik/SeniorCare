@@ -1,5 +1,6 @@
 package com.bussiness.composeseniorcare.ui.screen.authflow
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -22,6 +23,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,23 +40,55 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.bussiness.composeseniorcare.R
 import com.bussiness.composeseniorcare.navigation.Routes
+import com.bussiness.composeseniorcare.ui.component.AppLoader
 import com.bussiness.composeseniorcare.ui.component.OtpInputField
 import com.bussiness.composeseniorcare.ui.component.SubmitButton
 import com.bussiness.composeseniorcare.ui.theme.BackColor
 import com.bussiness.composeseniorcare.ui.theme.Poppins
 import com.bussiness.composeseniorcare.ui.theme.Purple
 import com.bussiness.composeseniorcare.util.ErrorMessage
+import com.bussiness.composeseniorcare.util.UiState
+import com.bussiness.composeseniorcare.viewmodel.VerifyOTPViewModel
 
 @Composable
 fun VerifyOTP(
     navController: NavHostController,
+    viewModel: VerifyOTPViewModel = hiltViewModel()
 ) {
     var otp by remember { mutableStateOf("") }
     var showError by remember { mutableStateOf(false) }
+    val state = viewModel.uiState.value
+    val context = LocalContext.current
+
+    if (state is UiState.Loading) {
+        AppLoader()
+    }
+
+    LaunchedEffect(state) {
+        when (state) {
+            is UiState.Success -> {
+
+                viewModel.resetState()
+            }
+
+            is UiState.Error -> {
+                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                viewModel.resetState()
+            }
+
+            UiState.NoInternet -> {
+                Toast.makeText(context, ErrorMessage.NO_INTERNET, Toast.LENGTH_SHORT).show()
+                viewModel.resetState()
+            }
+
+            else -> Unit
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -148,7 +182,7 @@ fun VerifyOTP(
 
                 Spacer(modifier = Modifier.height(5.dp))
 
-                // ✅ Make sure your OtpInputField has proper width/focus support
+                // Make sure your OtpInputField has proper width/focus support
                 OtpInputField(
                     otpText = otp,
                     onOtpTextChange = { otp = it },
@@ -199,6 +233,7 @@ fun VerifyOTP(
                     text = "Verify OTP",
                     onClick = {
                         if (otp.length == 6 && otp.isNotBlank()){
+//                            viewModel.verifyOtpApi()
                             navController.navigate(Routes.CREATE_PASSWORD)
                             showError = false
                         }else{

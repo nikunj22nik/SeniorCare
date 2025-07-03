@@ -32,10 +32,12 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.bussiness.composeseniorcare.R
 import com.bussiness.composeseniorcare.navigation.Routes
+import com.bussiness.composeseniorcare.ui.component.AppLoader
 import com.bussiness.composeseniorcare.ui.component.EmailOrPhoneInput
 import com.bussiness.composeseniorcare.ui.component.GoogleButtonWithIcon
 import com.bussiness.composeseniorcare.ui.component.HeadingText
@@ -47,15 +49,19 @@ import com.bussiness.composeseniorcare.ui.theme.Poppins
 import com.bussiness.composeseniorcare.ui.theme.Purple
 import com.bussiness.composeseniorcare.util.ErrorMessage
 import com.bussiness.composeseniorcare.util.SessionManager
+import com.bussiness.composeseniorcare.util.UiState
+import com.bussiness.composeseniorcare.viewmodel.login.LoginViewModel
 
 @Composable
 fun LoginScreen(
     navController: NavHostController,
-    onLoginClick: () -> Unit = {},
-    onSignUpClick: () -> Unit = { navController?.navigate(Routes.SIGN_UP) },
-    onForgotPasswordClick: () -> Unit = { navController?.navigate(Routes.FORGOT_PASSWORD) },
+    onSignUpClick: () -> Unit = { navController.navigate(Routes.SIGN_UP) },
+    onForgotPasswordClick: () -> Unit = { navController.navigate(Routes.FORGOT_PASSWORD) },
     onGoogleLoginClick: () -> Unit = {},
+    viewModel: LoginViewModel = hiltViewModel()
 ) {
+    val state = viewModel.uiState.value
+
     var input by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var showSuccessDialog by remember { mutableStateOf(false) }
@@ -70,10 +76,44 @@ fun LoginScreen(
             (context as? Activity)?.finishAffinity()
         } else {
             backPressedOnce = true
-            Toast.makeText(context, "Press back again to exit", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, ErrorMessage.BACK_PRESSED_ONCE, Toast.LENGTH_SHORT).show()
             Handler(Looper.getMainLooper()).postDelayed({
                 backPressedOnce = false
             }, 2000)
+        }
+    }
+
+    if (state is UiState.Loading) {
+        AppLoader()
+    }
+
+    LaunchedEffect(state) {
+        when (state) {
+            is UiState.Success -> {
+                val response = state.data
+                val userId = response.user.id ?: -1
+                val token = response.token ?: ""
+
+                sessionManager.setLogin(true)
+                sessionManager.setSkipLogin(false)
+                sessionManager.saveUserId(userId)
+                sessionManager.saveToken(token)
+
+                showSuccessDialog = true
+                viewModel.resetState()
+            }
+
+            is UiState.Error -> {
+                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                viewModel.resetState()
+            }
+
+            UiState.NoInternet -> {
+                Toast.makeText(context, ErrorMessage.NO_INTERNET, Toast.LENGTH_SHORT).show()
+                viewModel.resetState()
+            }
+
+            else -> Unit
         }
     }
 
@@ -236,10 +276,7 @@ fun LoginScreen(
                         passwordError = password.isBlank()
 
                         if (!emailError && !passwordError) {
-                            showSuccessDialog = true
-                            onLoginClick()
-                            sessionManager.setLogin(true)
-                            sessionManager.setSkipLogin(false)
+                            viewModel.login(input, password)
                         }else {
                             Toast.makeText(context, ErrorMessage.EMPTY_FIELD, Toast.LENGTH_SHORT).show()
                         }
@@ -333,7 +370,6 @@ fun LoginScreenPreview() {
     MaterialTheme {
         LoginScreen(
             navController = navController,
-            onLoginClick = {},
             onSignUpClick = {},
             onForgotPasswordClick = {},
             onGoogleLoginClick = {}

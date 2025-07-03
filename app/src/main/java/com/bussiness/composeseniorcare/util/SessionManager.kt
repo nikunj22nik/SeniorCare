@@ -38,6 +38,18 @@ class SessionManager(context: Context) {
 
     fun isSkippedLogin(): Boolean = preferences.getBoolean(ErrorMessage.KEY_IS_SKIP_LOGIN, false)
 
+    fun saveUserId(id: Int) {
+        preferences.edit { putInt(ErrorMessage.KEY_USER_ID, id) }
+    }
+
+    fun saveToken(token: String) {
+        preferences.edit { putString(ErrorMessage.KEY_TOKEN, token) }
+    }
+
+    fun getUserId(): Int = preferences.getInt(ErrorMessage.KEY_USER_ID, -1)
+
+    fun getToken(): String? = preferences.getString(ErrorMessage.KEY_TOKEN, null)
+
     fun clearSession() {
         preferences.edit { clear() }
     }
@@ -59,7 +71,7 @@ class SessionManager(context: Context) {
         preferences.edit { putInt(AppConstant.Id, id) }
     }
 
-    fun getUserId(): Int = preferences.getInt(AppConstant.Id, -1)
+
 
     fun setNeedMore(value: Boolean) {
         preferences.edit { putBoolean(AppConstant.NEEDMORE, value) }

@@ -9,6 +9,12 @@ object ErrorMessage {
     const val EMPTY_PASSWORD = "Password cannot be empty"
     const val MATCH_PASSWORD = "Passwords do not match"
     const val EMPTY_FIELD = "Please fill all the fields"
-    const val CATCH_ERROR = "Something went wrong"
+    const val API_ERROR = "Something went wrong. Please try again."
+    const val SERVER_ERROR = "Server error. Please try again later."
+    const val CATCH_ERROR = "Unexpected error occurred. Please check your connection or try again."
+    const val KEY_USER_ID = "user_id"
+    const val KEY_TOKEN = "auth_token"
+    const val BACK_PRESSED_ONCE = "Press back again to exit"
+    const val NO_INTERNET = "No Internet Connection"
 
 }

@@ -62,8 +62,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.bussiness.composeseniorcare.R
 import com.bussiness.composeseniorcare.ui.theme.Poppins
 import com.bussiness.composeseniorcare.ui.theme.Purple
@@ -643,3 +648,29 @@ fun SkippedFormat( onLoginClick: () -> Unit,onSignUpClick: () -> Unit ){
         }
     }
 }
+
+@Composable
+fun AppLoader(isLoading: Boolean = true) {
+    if (isLoading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.3f)),
+            contentAlignment = Alignment.Center
+        ) {
+            val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loader))
+            LottieAnimation(
+                composition,
+                iterations = LottieConstants.IterateForever,
+                modifier = Modifier.size(150.dp)
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewLottieLoader() {
+    AppLoader(isLoading = true)
+}
+
