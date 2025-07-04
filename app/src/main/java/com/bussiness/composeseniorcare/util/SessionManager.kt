@@ -50,6 +50,12 @@ class SessionManager(context: Context) {
 
     fun getToken(): String? = preferences.getString(ErrorMessage.KEY_TOKEN, null)
 
+    fun saveInput(input: String) {
+        preferences.edit { putString(ErrorMessage.INPUT, input) }
+    }
+
+    fun getSavedInput(): String? = preferences.getString(ErrorMessage.INPUT, null)
+
     fun clearSession() {
         preferences.edit { clear() }
     }

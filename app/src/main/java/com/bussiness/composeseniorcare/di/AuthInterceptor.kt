@@ -1,7 +1,6 @@
-package com.bussiness.composeseniorcare.apiservice
+package com.bussiness.composeseniorcare.di
 
 import android.content.Context
-import android.content.Intent
 import com.bussiness.composeseniorcare.util.SessionManager
 
 import okhttp3.Interceptor
@@ -21,7 +20,7 @@ class AuthInterceptor @Inject constructor(
             }
         }
         // Add static API key
-        //requestBuilder.addHeader("x-api-key", "bGS6lzFqvvSQ8ALbOxatm7/Vk7mLQyzqaS34Q4oR1ew=")
+
         val response = chain.proceed(requestBuilder.build())
         // Check for 401 Unauthorized response
         if (response.code == 401) {

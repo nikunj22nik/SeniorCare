@@ -14,7 +14,10 @@ object ErrorMessage {
     const val CATCH_ERROR = "Unexpected error occurred. Please check your connection or try again."
     const val KEY_USER_ID = "user_id"
     const val KEY_TOKEN = "auth_token"
+    const val INPUT = "emailOrPhone"
     const val BACK_PRESSED_ONCE = "Press back again to exit"
     const val NO_INTERNET = "No Internet Connection"
+    const val INVALID_OTP = "Invalid OTP"
+    const val PASSWORD_CHANGED = "Password changed successfully"
 
 }

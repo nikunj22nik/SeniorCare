@@ -1,12 +1,13 @@
 package com.bussiness.composeseniorcare.ui.screen.authflow
 
+import android.annotation.SuppressLint
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Arrangement.Top
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -33,19 +35,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.bussiness.composeseniorcare.R
 import com.bussiness.composeseniorcare.navigation.Routes
 import com.bussiness.composeseniorcare.ui.component.AppLoader
+import com.bussiness.composeseniorcare.ui.component.ErrorDialog
 import com.bussiness.composeseniorcare.ui.component.OtpInputField
 import com.bussiness.composeseniorcare.ui.component.SubmitButton
 import com.bussiness.composeseniorcare.ui.theme.BackColor
@@ -54,41 +57,99 @@ import com.bussiness.composeseniorcare.ui.theme.Purple
 import com.bussiness.composeseniorcare.util.ErrorMessage
 import com.bussiness.composeseniorcare.util.UiState
 import com.bussiness.composeseniorcare.viewmodel.VerifyOTPViewModel
+import kotlinx.coroutines.delay
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun VerifyOTP(
     navController: NavHostController,
+    input: String,
     viewModel: VerifyOTPViewModel = hiltViewModel()
 ) {
     var otp by remember { mutableStateOf("") }
     var showError by remember { mutableStateOf(false) }
-    val state = viewModel.uiState.value
-    val context = LocalContext.current
+    var showDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+    var secondsLeft by remember { mutableIntStateOf(59) }
+    var isTimerRunning by remember { mutableStateOf(true) }
 
-    if (state is UiState.Loading) {
-        AppLoader()
-    }
+    val verifyState = viewModel.getUiState("verify").value
+    val resendState = viewModel.getUiState("resend").value
 
-    LaunchedEffect(state) {
-        when (state) {
-            is UiState.Success -> {
 
-                viewModel.resetState()
+    LaunchedEffect(verifyState, resendState) {
+        when {
+            verifyState is UiState.Success -> {
+                Toast.makeText(navController.context, "OTP verified successfully", Toast.LENGTH_LONG).show()
+                navController.navigate("${Routes.CREATE_PASSWORD}/$input")
+                showError = false
+                viewModel.resetState("verify")
             }
 
-            is UiState.Error -> {
-                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
-                viewModel.resetState()
+            verifyState is UiState.Error -> {
+                errorMessage = verifyState.message
+                showDialog = true
+                viewModel.resetState("verify")
             }
 
-            UiState.NoInternet -> {
-                Toast.makeText(context, ErrorMessage.NO_INTERNET, Toast.LENGTH_SHORT).show()
-                viewModel.resetState()
+            verifyState == UiState.NoInternet -> {
+                errorMessage = ErrorMessage.NO_INTERNET
+                showDialog = true
+                viewModel.resetState("verify")
             }
 
-            else -> Unit
+            resendState is UiState.Success -> {
+                Toast.makeText(navController.context, "OTP resent successfully", Toast.LENGTH_LONG).show()
+                viewModel.resetState("resend")
+            }
+
+            resendState is UiState.Error -> {
+                errorMessage = resendState.message
+                showDialog = true
+                viewModel.resetState("resend")
+            }
+
+            resendState == UiState.NoInternet -> {
+                errorMessage = ErrorMessage.NO_INTERNET
+                showDialog = true
+                viewModel.resetState("resend")
+            }
         }
     }
+
+
+    LaunchedEffect(isTimerRunning) {
+        if (isTimerRunning) {
+            while (secondsLeft > 0) {
+                delay(1000L)
+                secondsLeft--
+            }
+            isTimerRunning = false
+        }
+    }
+
+
+    if (showDialog) {
+        ErrorDialog(
+            message = errorMessage,
+            onConfirm = { showDialog = false },
+            onDismiss = { showDialog = false }
+        )
+    }
+
+    if (verifyState is UiState.Loading || resendState is UiState.Loading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.3f))
+                .zIndex(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            AppLoader()
+        }
+    }
+
+
 
     Box(
         modifier = Modifier
@@ -190,7 +251,7 @@ fun VerifyOTP(
 
                 if (showError) {
                     Text(
-                        text = ErrorMessage.INLINE_ERROR_EMAIL,
+                        text = ErrorMessage.INVALID_OTP,
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontFamily = Poppins,
                             fontWeight = FontWeight.SemiBold,
@@ -214,12 +275,25 @@ fun VerifyOTP(
                         fontFamily = Poppins,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Normal,
-                        color = Color.Black,
-                        modifier = Modifier.clickable {  }
+                        color = if (isTimerRunning) Color.Gray else Color.Black,
+                        modifier = Modifier
+                            .then(
+                                if (!isTimerRunning) {
+                                    Modifier.clickable {
+                                        secondsLeft = 59
+                                        isTimerRunning = true
+                                        viewModel.resendOTPApi(input)
+                                    }
+                                } else {
+                                    Modifier.clickable(enabled = false) {}
+                                }
+                            )
                     )
 
+                    val timerText = String.format("00:%02d", secondsLeft)
+
                     Text(
-                        text = "00:59",
+                        text = timerText,
                         fontFamily = Poppins,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Normal,
@@ -233,9 +307,7 @@ fun VerifyOTP(
                     text = "Verify OTP",
                     onClick = {
                         if (otp.length == 6 && otp.isNotBlank()){
-//                            viewModel.verifyOtpApi()
-                            navController.navigate(Routes.CREATE_PASSWORD)
-                            showError = false
+                            viewModel.verifyOtpApi(input,otp)
                         }else{
                             showError = true
                         }
@@ -254,6 +326,7 @@ fun VerifyOTPPreview() {
     MaterialTheme {
         VerifyOTP (
             navController =navController,
+            input = "xyz@gmail.com"
 
         )
     }

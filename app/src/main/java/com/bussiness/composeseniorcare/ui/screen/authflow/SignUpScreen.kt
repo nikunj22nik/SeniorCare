@@ -36,18 +36,24 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.bussiness.composeseniorcare.R
 import com.bussiness.composeseniorcare.navigation.Routes
+import com.bussiness.composeseniorcare.ui.component.AppLoader
 import com.bussiness.composeseniorcare.ui.component.EmailOrPhoneInput
+import com.bussiness.composeseniorcare.ui.component.ErrorDialog
 import com.bussiness.composeseniorcare.ui.component.HeadingText
 import com.bussiness.composeseniorcare.ui.component.PasswordInput
 import com.bussiness.composeseniorcare.ui.component.SubmitButton
 import com.bussiness.composeseniorcare.ui.theme.BackColor
 import com.bussiness.composeseniorcare.ui.theme.Poppins
 import com.bussiness.composeseniorcare.ui.theme.Purple
+import com.bussiness.composeseniorcare.util.CommonUtils
 import com.bussiness.composeseniorcare.util.SessionManager
+import com.bussiness.composeseniorcare.util.UiState
+import com.bussiness.composeseniorcare.viewmodel.RegisterViewModel
 
 @Composable
 fun SignUpScreen(
@@ -58,13 +64,50 @@ fun SignUpScreen(
     onPrivacyClick: () -> Unit,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
+    viewModel: RegisterViewModel = hiltViewModel()
 ) {
+    val state by viewModel.uiState.collectAsState()
+    var showDialogError by remember { mutableStateOf(false) }
+    var dialogMessage by remember { mutableStateOf("") }
+
+    val registerResult by viewModel.registerState.collectAsState()
+
     var input by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
 
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
+
+    when(registerResult) {
+        is UiState.Loading -> {
+            AppLoader()
+        }
+        is UiState.Success -> {
+            val data = (registerResult as UiState.Success).data
+            // Putting the value
+            onRegisterClick()
+            sessionManager.setLogin(true)
+            sessionManager.setSkipLogin(false)
+        }
+        is UiState.Error -> {
+            val error = (registerResult as UiState.Error).message
+            ErrorDialog(message = error, onConfirm = { showDialogError = false }) {
+                showDialogError = false
+            }
+        }
+        UiState.Idle -> {} // do nothing
+        UiState.NoInternet -> TODO()
+    }
+
+
+    if(showDialogError){
+        ErrorDialog(message = dialogMessage, onConfirm = {
+            showDialogError = false
+        }) {
+            showDialogError = false
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -106,7 +149,10 @@ fun SignUpScreen(
             Box(
                 modifier = Modifier
                     .matchParentSize()
-                    .background(color = BackColor, shape = RoundedCornerShape(topStart = 50.dp, topEnd = 50.dp))
+                    .background(
+                        color = BackColor,
+                        shape = RoundedCornerShape(topStart = 50.dp, topEnd = 50.dp)
+                    )
                     .border(
                         width = 2.dp,
                         color = Purple,
@@ -158,19 +204,24 @@ fun SignUpScreen(
 
                 HeadingText(text = "Email/Phone Number")
                 Spacer(modifier = Modifier.height(8.dp))
-                EmailOrPhoneInput(value = input, onValueChange = { input = it })
+                EmailOrPhoneInput(value = state.email_or_phone,
+                    onValueChange = { viewModel.onEmailChanged(it) }
+                )
 
                 Spacer(modifier = Modifier.height(15.dp))
 
                 HeadingText(text = "Password")
                 Spacer(modifier = Modifier.height(8.dp))
-                PasswordInput(password = password, onPasswordChange = { password = it })
+                PasswordInput(password = state.password,
+                    onPasswordChange = { viewModel.onPasswordChanged(it) })
 
                 Spacer(modifier = Modifier.height(15.dp))
 
                 HeadingText(text = "Confirm Password")
                 Spacer(modifier = Modifier.height(8.dp))
-                PasswordInput(password = confirmPassword, onPasswordChange = { confirmPassword = it })
+                PasswordInput(password = confirmPassword,
+                    onPasswordChange = { confirmPassword = it }
+                )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -228,11 +279,11 @@ fun SignUpScreen(
                 SubmitButton(
                     text = "Register",
                     onClick = {
-                        val emailError = input.isBlank()
-                        val passwordError = password.isBlank()
+                        val emailError = state.email_or_phone.isBlank()
+                        val passwordError = state.password.isBlank()
                         val confirmPasswordError = confirmPassword.isBlank()
-                        val passwordsMatch = password == confirmPassword
-
+                        val passwordsMatch = state.password == confirmPassword
+                        val isValidEmailOrPhone = CommonUtils.isEmailOrPhone(state.email_or_phone)
                         val message = when {
                             emailError && passwordError && confirmPasswordError -> "Please fill all details"
                             emailError -> "Please enter email or phone"
@@ -240,15 +291,17 @@ fun SignUpScreen(
                             confirmPasswordError -> "Please confirm your password"
                             !passwordsMatch -> "Passwords do not match"
                             !checked -> "Please accept terms and conditions"
+                            !isValidEmailOrPhone -> "Please Enter Valid Email Or Phone Number"
+
                             else -> null
                         }
 
                         if (message != null) {
-                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                            dialogMessage = message
+                            showDialogError = true
+
                         } else {
-                            onRegisterClick()
-                            sessionManager.setLogin(true)
-                            sessionManager.setSkipLogin(false)
+                            viewModel.registerUser()
                         }
                     }
                 )
@@ -283,6 +336,8 @@ fun SignUpScreen(
             }
         }
     }
+
+
 }
 
 

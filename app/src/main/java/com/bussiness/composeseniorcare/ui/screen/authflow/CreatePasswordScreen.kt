@@ -1,5 +1,6 @@
 package com.bussiness.composeseniorcare.ui.screen.authflow
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,10 +35,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.bussiness.composeseniorcare.R
 import com.bussiness.composeseniorcare.navigation.Routes
+import com.bussiness.composeseniorcare.ui.component.AppLoader
+import com.bussiness.composeseniorcare.ui.component.ErrorDialog
 import com.bussiness.composeseniorcare.ui.component.HeadingText
 import com.bussiness.composeseniorcare.ui.component.PasswordInput
 import com.bussiness.composeseniorcare.ui.component.SubmitButton
@@ -44,12 +50,67 @@ import com.bussiness.composeseniorcare.ui.theme.BackColor
 import com.bussiness.composeseniorcare.ui.theme.Poppins
 import com.bussiness.composeseniorcare.ui.theme.Purple
 import com.bussiness.composeseniorcare.util.ErrorMessage
+import com.bussiness.composeseniorcare.util.UiState
+import com.bussiness.composeseniorcare.viewmodel.CreatePasswordViewModel
 
 @Composable
-fun CreatePasswordScreen(navController: NavHostController) {
+fun CreatePasswordScreen(
+    navController: NavHostController,
+    input : String,
+    viewModel: CreatePasswordViewModel = hiltViewModel()
+) {
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     val errorMessage = remember { mutableStateOf("") }
+    val state = viewModel.uiState.value
+    var showDialog by remember { mutableStateOf(false) }
+    var alertMessage by remember { mutableStateOf("") }
+
+
+    LaunchedEffect(state) {
+        when (state) {
+            is UiState.Success -> {
+                Toast.makeText(navController.context, ErrorMessage.PASSWORD_CHANGED, Toast.LENGTH_LONG).show()
+                navController.navigate(Routes.LOGIN)
+                showDialog = false
+                viewModel.resetState()
+            }
+
+            is UiState.Error -> {
+                alertMessage = state.message
+                showDialog = true
+                viewModel.resetState()
+            }
+
+            UiState.NoInternet -> {
+                alertMessage = ErrorMessage.NO_INTERNET
+                showDialog = true
+                viewModel.resetState()
+            }
+
+            else -> Unit
+        }
+    }
+
+    if (showDialog) {
+        ErrorDialog(
+            message = alertMessage,
+            onConfirm = { showDialog = false },
+            onDismiss = { showDialog = false }
+        )
+    }
+
+    if (state is UiState.Loading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.3f))
+                .zIndex(1f), // to bring it on top if necessary
+            contentAlignment = Alignment.Center
+        ) {
+            AppLoader()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -159,7 +220,7 @@ fun CreatePasswordScreen(navController: NavHostController) {
 
                         // Proceed to login screen
                         errorMessage.value = ""
-                        navController.navigate(Routes.LOGIN)
+                        viewModel.createPasswordApi(input,confirmPassword)
                     }
                 )
 
@@ -180,6 +241,6 @@ fun validatePasswords(password: String, confirmPassword: String): String? {
 fun CreatePasswordScreenPreview() {
     val navController = rememberNavController()
     MaterialTheme {
-        CreatePasswordScreen(navController = navController)
+        CreatePasswordScreen(navController = navController, input = "")
     }
 }

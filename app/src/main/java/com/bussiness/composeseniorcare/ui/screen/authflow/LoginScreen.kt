@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -39,6 +40,7 @@ import com.bussiness.composeseniorcare.R
 import com.bussiness.composeseniorcare.navigation.Routes
 import com.bussiness.composeseniorcare.ui.component.AppLoader
 import com.bussiness.composeseniorcare.ui.component.EmailOrPhoneInput
+import com.bussiness.composeseniorcare.ui.component.ErrorDialog
 import com.bussiness.composeseniorcare.ui.component.GoogleButtonWithIcon
 import com.bussiness.composeseniorcare.ui.component.HeadingText
 import com.bussiness.composeseniorcare.ui.component.LoginSuccessDialog
@@ -70,6 +72,8 @@ fun LoginScreen(
     var emailError by remember { mutableStateOf(false) }
     var passwordError by remember { mutableStateOf(false) }
     var backPressedOnce by remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
 
     BackHandler(true) {
         if (backPressedOnce) {
@@ -83,39 +87,52 @@ fun LoginScreen(
         }
     }
 
-    if (state is UiState.Loading) {
-        AppLoader()
-    }
-
     LaunchedEffect(state) {
         when (state) {
             is UiState.Success -> {
                 val response = state.data
                 val userId = response.user.id ?: -1
                 val token = response.token ?: ""
+                val email = response.user.email ?: ""
 
                 sessionManager.setLogin(true)
                 sessionManager.setSkipLogin(false)
                 sessionManager.saveUserId(userId)
                 sessionManager.saveToken(token)
+                sessionManager.saveInput(email)
 
                 showSuccessDialog = true
                 viewModel.resetState()
             }
 
             is UiState.Error -> {
-                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                errorMessage = state.message
+                showDialog = true
                 viewModel.resetState()
             }
 
             UiState.NoInternet -> {
-                Toast.makeText(context, ErrorMessage.NO_INTERNET, Toast.LENGTH_SHORT).show()
+                errorMessage = ErrorMessage.NO_INTERNET
+                showDialog = true
                 viewModel.resetState()
             }
 
             else -> Unit
         }
     }
+
+    if (state is UiState.Loading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.3f))
+                .zIndex(1f), // to bring it on top if necessary
+            contentAlignment = Alignment.Center
+        ) {
+            AppLoader()
+        }
+    }
+
 
 
     Box(
@@ -133,6 +150,14 @@ fun LoginScreen(
                         popUpTo(Routes.LOGIN) { inclusive = true }
                     }
                 }
+            )
+        }
+
+        if (showDialog) {
+            ErrorDialog(
+                message = errorMessage,
+                onConfirm = { showDialog = false },
+                onDismiss = { showDialog = false }
             )
         }
 

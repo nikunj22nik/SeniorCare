@@ -4,8 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.bussiness.composeseniorcare.ui.intro.OnboardingScreen
 import com.bussiness.composeseniorcare.ui.screen.mainflow.MainScreen
 import com.bussiness.composeseniorcare.ui.intro.SplashScreen
@@ -22,15 +24,11 @@ fun NavGraph(authNavController: NavHostController) {
 
         composable(Routes.LOGIN) { LoginScreen(authNavController) }
         composable(Routes.SPLASH) { SplashScreen(authNavController) }
-        composable(Routes.VERIFY_OTP) { VerifyOTP(authNavController) }
         composable(Routes.MAIN_SCREEN){ MainScreen(authNavController) }
         composable(Routes.ONBOARDING) { OnboardingScreen(authNavController) }
         composable(Routes.FORGOT_PASSWORD) { ForgotPasswordScreen(authNavController) }
-        composable(Routes.CREATE_PASSWORD) { CreatePasswordScreen(navController = authNavController,) }
         composable(Routes.ABOUT_US){ AboutUs(navController = authNavController, title = "About Us")}
-        composable(Routes.SIGN_UP) {
-            val checkedState = remember { mutableStateOf(false) }
-
+        composable(Routes.SIGN_UP) { val checkedState = remember { mutableStateOf(false) }
             SignUpScreen(
                 navController = authNavController,
                 onLoginClick = { authNavController.navigate(Routes.LOGIN) },
@@ -40,12 +38,19 @@ fun NavGraph(authNavController: NavHostController) {
                 onCheckedChange = { checkedState.value = it }
             )
         }
-
-
-
-
-
-
-
+        composable(
+            route = "${Routes.VERIFY_OTP}/{input}",
+            arguments = listOf(navArgument("input") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val input = backStackEntry.arguments?.getString("input") ?: ""
+            VerifyOTP(navController = authNavController,input)
+        }
+        composable(
+            route = "${Routes.CREATE_PASSWORD}/{input}",
+            arguments = listOf(navArgument("input") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val input = backStackEntry.arguments?.getString("input") ?: ""
+            CreatePasswordScreen(navController = authNavController,input)
+        }
     }
 }

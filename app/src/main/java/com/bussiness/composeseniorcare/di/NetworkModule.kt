@@ -6,7 +6,6 @@ import android.util.Log
 import com.bussiness.composeseniorcare.BuildConfig
 import com.bussiness.composeseniorcare.apiservice.ApiListing
 import com.bussiness.composeseniorcare.apiservice.ApiRepository
-import com.bussiness.composeseniorcare.apiservice.AuthInterceptor
 import com.bussiness.composeseniorcare.apiservice.RepositoryImpl
 import dagger.Module
 import dagger.Provides
