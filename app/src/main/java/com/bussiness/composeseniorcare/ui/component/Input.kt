@@ -525,6 +525,7 @@ fun TopHeadingText(
             contentDescription = "Back icon",
             modifier = Modifier
                 .align(Alignment.CenterStart)
+                .padding(start = 5.dp)
                 .clickable { onBackPress() }
                 .wrapContentSize()
         )

@@ -17,4 +17,16 @@ class VerifyOTPViewModel  @Inject constructor(app: Application, private val repo
     fun resendOTPApi(email: String) {
         launchFlowWithKey("resend",repository.forgotPasswordApi(email))
     }
+
+    fun sendPhoneOtp(phone: String) {
+        launchFlowWithKey("sendPhoneOtp",repository.sendPhoneOtpApi(phone))
+    }
+
+    fun verifyPhoneOtp(otp: String,phone: String) {
+        launchFlowWithKey("verifyPhoneOtp",repository.verifyPhoneOtpApi(otp,phone))
+    }
+
+    fun logoutApi(id: Int) {
+        launchFlow(repository.logoutApi(id))
+    }
 }

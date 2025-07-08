@@ -1,5 +1,6 @@
 package com.bussiness.composeseniorcare.ui.screen.mainflow
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -36,6 +37,11 @@ fun SavedFacilities(
     facilities: List<Facility>,
     onOpenDrawer: () -> Unit
 ) {
+
+    BackHandler {
+        navController.navigate(Routes.HOME_SCREEN)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()

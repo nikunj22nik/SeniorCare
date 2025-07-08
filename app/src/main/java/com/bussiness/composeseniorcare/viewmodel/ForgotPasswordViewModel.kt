@@ -1,9 +1,8 @@
-package com.bussiness.composeseniorcare.viewmodel.forgotpassword
+package com.bussiness.composeseniorcare.viewmodel
 
 import android.app.Application
 import com.bussiness.composeseniorcare.apiservice.ApiRepository
 import com.bussiness.composeseniorcare.model.CommonResponseModel
-import com.bussiness.composeseniorcare.viewmodel.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 

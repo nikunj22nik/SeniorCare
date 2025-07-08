@@ -3,6 +3,7 @@ package com.bussiness.composeseniorcare.ui.screen.authflow
 import android.app.Activity
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
@@ -52,7 +53,7 @@ import com.bussiness.composeseniorcare.ui.theme.Purple
 import com.bussiness.composeseniorcare.util.ErrorMessage
 import com.bussiness.composeseniorcare.util.SessionManager
 import com.bussiness.composeseniorcare.util.UiState
-import com.bussiness.composeseniorcare.viewmodel.login.LoginViewModel
+import com.bussiness.composeseniorcare.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(
@@ -98,7 +99,7 @@ fun LoginScreen(
                 sessionManager.setLogin(true)
                 sessionManager.setSkipLogin(false)
                 sessionManager.saveUserId(userId)
-                sessionManager.saveToken(token)
+                sessionManager.setAuthToken(token)
                 sessionManager.saveInput(email)
 
                 showSuccessDialog = true

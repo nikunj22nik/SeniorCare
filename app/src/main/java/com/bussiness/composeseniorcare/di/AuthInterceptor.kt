@@ -1,6 +1,7 @@
 package com.bussiness.composeseniorcare.di
 
 import android.content.Context
+import android.util.Log
 import com.bussiness.composeseniorcare.util.SessionManager
 
 import okhttp3.Interceptor
@@ -15,6 +16,7 @@ class AuthInterceptor @Inject constructor(
 
         // Add Authorization header if token is available
         sessionManager.getAuthToken()?.let { token ->
+            Log.d("TOKEN##", token)
             if (token.isNotEmpty()) {
                 requestBuilder.addHeader("Authorization", "Bearer $token")
             }

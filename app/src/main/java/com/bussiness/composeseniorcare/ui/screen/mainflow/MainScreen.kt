@@ -1,6 +1,7 @@
 package com.bussiness.composeseniorcare.ui.screen.mainflow
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +42,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -47,12 +51,17 @@ import com.bussiness.composeseniorcare.R
 import com.bussiness.composeseniorcare.data.model.DrawerMenuItem
 import com.bussiness.composeseniorcare.navigation.BottomNavGraph
 import com.bussiness.composeseniorcare.navigation.Routes
+import com.bussiness.composeseniorcare.ui.component.AppLoader
 import com.bussiness.composeseniorcare.ui.component.CustomBottomBar
+import com.bussiness.composeseniorcare.ui.component.ErrorDialog
 import com.bussiness.composeseniorcare.ui.component.SkippedFormat
 import com.bussiness.composeseniorcare.ui.component.StatusDialog
 import com.bussiness.composeseniorcare.ui.component.bottomNavItems
 import com.bussiness.composeseniorcare.ui.component.savedFacilities
+import com.bussiness.composeseniorcare.util.ErrorMessage
 import com.bussiness.composeseniorcare.util.SessionManager
+import com.bussiness.composeseniorcare.util.UiState
+import com.bussiness.composeseniorcare.viewmodel.VerifyOTPViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -66,6 +75,10 @@ fun MainScreen(authNavController: NavHostController) {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
     var showLogoutDialog by remember { mutableStateOf(false) }
+    val viewModel : VerifyOTPViewModel = hiltViewModel()
+    var showDialog by remember { mutableStateOf(false) }
+    var alertMessage by remember { mutableStateOf("") }
+    val state = viewModel.uiState.value
 
     val bottomBarRoots = listOf(
         Routes.HOME_SCREEN,
@@ -73,6 +86,55 @@ fun MainScreen(authNavController: NavHostController) {
         Routes.SAVED_FACILITIES,
         Routes.PROFILE_SCREEN
     )
+
+    LaunchedEffect(state) {
+        when (state) {
+            is UiState.Success -> {
+                // Clear session or preferences if needed
+                sessionManager.clearSession()
+                authNavController.navigate(Routes.LOGIN) {
+                    popUpTo(0) { inclusive = true }
+                }
+                showDialog = false
+                viewModel.resetState()
+            }
+
+            is UiState.Error -> {
+                alertMessage = state.message
+                showDialog = true
+                viewModel.resetState()
+            }
+
+            UiState.NoInternet -> {
+                alertMessage = ErrorMessage.NO_INTERNET
+                showDialog = true
+                viewModel.resetState()
+            }
+
+            else -> Unit
+        }
+    }
+
+    if (showDialog) {
+        ErrorDialog(
+            message = alertMessage,
+            onConfirm = { showDialog = false },
+            onDismiss = { showDialog = false }
+        )
+    }
+
+    if (state is UiState.Loading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.3f))
+                .zIndex(1f), // to bring it on top if necessary
+            contentAlignment = Alignment.Center
+        ) {
+            AppLoader()
+        }
+    }
+
 
     ModalDrawer(
         drawerState = drawerState,
@@ -101,11 +163,7 @@ fun MainScreen(authNavController: NavHostController) {
                     onDismiss = { showLogoutDialog = false },
                     onYesClick = {
                         showLogoutDialog = false
-                        // Clear session or preferences if needed
-                        sessionManager.clearSession()
-                        authNavController.navigate(Routes.LOGIN) {
-                            popUpTo(0) { inclusive = true }
-                        }
+                        viewModel.logoutApi(sessionManager.getUserId())
                     },
                     onNoClick = { showLogoutDialog = false },
                     description = "Logout",

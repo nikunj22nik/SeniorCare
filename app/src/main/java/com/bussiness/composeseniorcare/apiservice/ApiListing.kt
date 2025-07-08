@@ -2,13 +2,18 @@ package com.bussiness.composeseniorcare.apiservice
 
 import com.bussiness.composeseniorcare.model.CommonResponseModel
 import com.bussiness.composeseniorcare.model.LoginResponse
+import com.bussiness.composeseniorcare.model.ProfileModel
 import com.bussiness.composeseniorcare.model.Register
 import com.google.gson.JsonObject
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
+import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.Part
 
 interface ApiListing {
 
@@ -47,6 +52,51 @@ interface ApiListing {
     suspend fun createPasswordApi(
         @Field("email_or_phone") emailOrPhone: String,
         @Field("password") password: String,
+    ): Response<CommonResponseModel>
+
+    @FormUrlEncoded
+    @POST(ApiEndPoint.LOGOUT)
+    suspend fun logoutApi(
+        @Field("id") id: Int,
+    ): Response<CommonResponseModel>
+
+    @FormUrlEncoded
+    @POST(ApiEndPoint.GET_PROFILE)
+    suspend fun getProfileApi(
+        @Field("id") id: String,
+    ): Response<ProfileModel>
+
+    @Multipart
+    @POST(ApiEndPoint.EDIT_PROFILE)
+    suspend fun editProfileApi(
+        @Part("id") id: RequestBody,
+        @Part("name") name: RequestBody,
+        @Part("email") email: RequestBody,
+        @Part("phone") phone: RequestBody,
+        @Part("location") location: RequestBody,
+        @Part profileImage: MultipartBody.Part? // Nullable to allow optional image
+    ): Response<ProfileModel>
+
+    @FormUrlEncoded
+    @POST(ApiEndPoint.SEND_PHONE_OTP)
+    suspend fun sendPhoneOtpApi(
+        @Field("phone") phone: String,
+    ): Response<CommonResponseModel>
+
+    @FormUrlEncoded
+    @POST(ApiEndPoint.VERIFY_PHONE)
+    suspend fun verifyPhoneOtpApi(
+        @Field("otp") otp: String,
+        @Field("phone") phone: String
+    ): Response<CommonResponseModel>
+
+    @FormUrlEncoded
+    @POST(ApiEndPoint.CONTACT_US)
+    suspend fun contactUsApi(
+        @Field("name") name: String,
+        @Field("email") email: String,
+        @Field("phone") phone: String,
+        @Field("message") message: String,
     ): Response<CommonResponseModel>
 
 

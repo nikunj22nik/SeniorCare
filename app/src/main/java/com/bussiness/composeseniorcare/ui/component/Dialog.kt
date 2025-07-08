@@ -568,30 +568,181 @@ fun FilterDropdown(
     }
 }
 
+@Composable
+fun VerifyOTPDialog(
+    onDismiss: () -> Unit,
+    otpText: String,
+    onOtpTextChange: (String) -> Unit,
+    onYesClick: () -> Unit,
+    onNoClick: () -> Unit,
+    description: String,
+    content: String,
+    icon: Int,
+    lButtonText: String,
+    rButtonText: String
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 0.dp)
+        ) {
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = Color.White,
+                shadowElevation = 8.dp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = 400.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                ) {
+                    // Close icon
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.cross_ic),
+                            contentDescription = "Close",
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .clickable(onClick = onDismiss)
+                                .padding(8.dp),
+                            tint = Color.Unspecified
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Icon center (optional, uncomment if needed)
+                    Image(
+                        painter = painterResource(id = icon),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(64.dp)
+                            .align(Alignment.CenterHorizontally)
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Title
+                    Text(
+                        text = description,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = FontFamily(Font(R.font.poppins_semi_bold)),
+                        color = Color.Black,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 18.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Content
+                    Text(
+                        text = content,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily(Font(R.font.open_sans)),
+                        color = Color(0xFF4A4A4A),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 18.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // OTP Field
+                    OtpInputField(
+                        otpText = otpText,
+                        onOtpTextChange = onOtpTextChange
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Buttons
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp)
+                            .padding(bottom = 20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Button(
+                            onClick = onYesClick,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(45.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Purple,
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Text(
+                                text = lButtonText,
+                                fontSize = 16.sp,
+                                fontFamily = FontFamily(Font(R.font.poppins)),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        OutlinedButton(
+                            onClick = onNoClick,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(45.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, Purple),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = Purple
+                            )
+                        ) {
+                            Text(
+                                text = rButtonText,
+                                fontSize = 16.sp,
+                                fontFamily = FontFamily(Font(R.font.poppins)),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
 
 
 
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewFilterDialog() {
-    val open = remember { mutableStateOf(true) }
-    val priceRange = remember { mutableStateOf(5000f..100000f) }
-    val selectedAmenities = remember { mutableStateOf(setOf<String>()) }
+fun PreviewVerifyOTPDialog() {
+    var otp by remember { mutableStateOf("") }
+    var open by remember { mutableStateOf(true) }
 
-    if (open.value) {
-        StatusDialog(
-            onDismiss = { open.value = false },
-            onYesClick = { open.value = false },
-            onNoClick = { open.value = false },
-            description = "Deleting your Account?",
-            content = "Are you sure you want to delete?",
+    if (open) {
+        VerifyOTPDialog(
+            onDismiss = { open = false },
+            otpText = otp,
+            onOtpTextChange = { otp = it },
+            onYesClick = { open = false },
+            onNoClick = { open = false },
+            description = "Verify OTP",
+            content = "Enter the OTP sent to your number.",
             icon = R.drawable.tick_ic,
-            lButtonText = "Delete",
+            lButtonText = "Verify",
             rButtonText = "Cancel"
         )
     }
 }
+
 
 private fun Set<String>.toggle(item: String): Set<String> =
     if (contains(item)) this - item else this + item

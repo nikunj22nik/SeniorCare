@@ -1,7 +1,6 @@
 package com.bussiness.composeseniorcare.ui.screen.authflow
 
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,7 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -52,7 +50,7 @@ import com.bussiness.composeseniorcare.ui.theme.Poppins
 import com.bussiness.composeseniorcare.ui.theme.Purple
 import com.bussiness.composeseniorcare.util.ErrorMessage
 import com.bussiness.composeseniorcare.util.UiState
-import com.bussiness.composeseniorcare.viewmodel.forgotpassword.ForgotPasswordViewModel
+import com.bussiness.composeseniorcare.viewmodel.ForgotPasswordViewModel
 
 @Composable
 fun ForgotPasswordScreen(

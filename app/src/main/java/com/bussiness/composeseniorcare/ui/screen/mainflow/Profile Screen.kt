@@ -5,12 +5,12 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,15 +19,12 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -45,6 +42,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,28 +65,168 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.bussiness.composeseniorcare.R
+import com.bussiness.composeseniorcare.model.VerificationType
+import com.bussiness.composeseniorcare.navigation.Routes
+import com.bussiness.composeseniorcare.ui.component.AppLoader
+import com.bussiness.composeseniorcare.ui.component.ErrorDialog
 import com.bussiness.composeseniorcare.ui.component.SubmitButton
 import com.bussiness.composeseniorcare.ui.component.TopHeadingText
+import com.bussiness.composeseniorcare.ui.component.VerifyOTPDialog
 import com.bussiness.composeseniorcare.ui.theme.Purple
+import com.bussiness.composeseniorcare.util.ErrorMessage
+import com.bussiness.composeseniorcare.util.SessionManager
+import com.bussiness.composeseniorcare.util.UiState
+import com.bussiness.composeseniorcare.viewmodel.ProfileViewModel
+import com.bussiness.composeseniorcare.viewmodel.VerifyOTPViewModel
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 
 @Composable
 fun ProfileScreen(navController: NavHostController) {
+
+    var clickedEdit by remember { mutableStateOf(false) }
+    var profileImageUri by remember { mutableStateOf<Uri?>(null) }
+    var showImagePickerDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+    val viewModel: ProfileViewModel = hiltViewModel()
+    val otpViewModel : VerifyOTPViewModel = hiltViewModel()
+
+    var showDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
     var location by remember { mutableStateOf("") }
-    var clickedEdit by remember { mutableStateOf(false) }
-    var profileImageUri by remember { mutableStateOf<Uri?>(null) }
-    var showImagePickerDialog by remember { mutableStateOf(false) }
+    var profileImageUrl by remember { mutableStateOf<String?>(null) }
+    var showVerifyDialog by remember { mutableStateOf(false) }
+    var otp by remember { mutableStateOf("") }
+    var verifyingField by remember { mutableStateOf<VerificationType?>(null) }
 
-    val context = LocalContext.current
+    // API states
+    val getProfileState = viewModel.getUiState("getProfile").value
+    val editProfileState = viewModel.getUiState("editProfile").value
+    val sendPhoneOtpState = otpViewModel.getUiState("sendPhoneOtp").value
+    val verifyPhoneOtpState = otpViewModel.getUiState("verifyPhoneOtp").value
+
+    // Initial Profile Load
+    LaunchedEffect(Unit) {
+        viewModel.getProfile(sessionManager.getUserId().toString())
+    }
+
+    //  Handle Profile Get Response
+    LaunchedEffect(getProfileState, editProfileState, sendPhoneOtpState,verifyPhoneOtpState) {
+        when {
+            getProfileState is UiState.Success -> {
+                val profile = getProfileState.data.data
+                name = profile.name
+                email = profile.email
+                phone = profile.phone
+                location = profile.location
+                profileImageUrl = profile.profileImage
+                viewModel.resetState("getProfile")
+            }
+
+            getProfileState is UiState.Error -> {
+                errorMessage = getProfileState.message
+                showDialog = true
+                viewModel.resetState("getProfile")
+            }
+
+            getProfileState == UiState.NoInternet -> {
+                errorMessage = ErrorMessage.NO_INTERNET
+                showDialog = true
+                viewModel.resetState("getProfile")
+            }
+
+            editProfileState is UiState.Success -> {
+                Toast.makeText(context, "Profile updated", Toast.LENGTH_SHORT).show()
+                viewModel.getProfile(sessionManager.getUserId().toString()) // Refresh profile
+                viewModel.resetState("editProfile")
+            }
+
+            editProfileState is UiState.Error -> {
+                errorMessage = editProfileState.message
+                showDialog = true
+                viewModel.resetState("editProfile")
+            }
+
+            editProfileState == UiState.NoInternet -> {
+                errorMessage = ErrorMessage.NO_INTERNET
+                showDialog = true
+                viewModel.resetState("editProfile")
+            }
+
+            sendPhoneOtpState is UiState.Success -> {
+                Toast.makeText(context, "OTP sent", Toast.LENGTH_SHORT).show()
+                viewModel.resetState("sendPhoneOtp")
+            }
+
+            sendPhoneOtpState is UiState.Error -> {
+                errorMessage = sendPhoneOtpState.message
+                showDialog = true
+                viewModel.resetState("sendPhoneOtp")
+            }
+
+            sendPhoneOtpState == UiState.NoInternet -> {
+                errorMessage = ErrorMessage.NO_INTERNET
+                showDialog = true
+                viewModel.resetState("sendPhoneOtp")
+            }
+
+            verifyPhoneOtpState is UiState.Success -> {
+                Toast.makeText(context, "OTP verified", Toast.LENGTH_SHORT).show()
+                showVerifyDialog = false
+                otp = ""
+                viewModel.resetState("verifyPhoneOtp")
+            }
+
+            verifyPhoneOtpState is UiState.Error -> {
+                errorMessage = verifyPhoneOtpState.message
+                showDialog = true
+                viewModel.resetState("verifyPhoneOtp")
+            }
+
+            verifyPhoneOtpState == UiState.NoInternet -> {
+                errorMessage = ErrorMessage.NO_INTERNET
+                showDialog = true
+                viewModel.resetState("verifyPhoneOtp")
+            }
+        }
+    }
+
+
+    // Show loader if any operation is in progress
+    if (getProfileState is UiState.Loading || editProfileState is UiState.Loading || sendPhoneOtpState is UiState.Loading
+        || verifyPhoneOtpState is UiState.Loading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.3f))
+                .zIndex(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            AppLoader()
+        }
+    }
+
+    if (showDialog) {
+        ErrorDialog(
+            message = errorMessage,
+            onConfirm = { showDialog = false },
+            onDismiss = { showDialog = false }
+        )
+    }
 
     val launcherGallery = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -141,9 +279,13 @@ fun ProfileScreen(navController: NavHostController) {
     ) {
         TopHeadingText(
             text = "Profile",
-            onBackPress = { navController.popBackStack() },
+            onBackPress = { navController.navigate(Routes.HOME_SCREEN) },
             modifier = Modifier
         )
+
+        BackHandler {
+            navController.navigate(Routes.HOME_SCREEN)
+        }
 
 
         Box(
@@ -175,13 +317,17 @@ fun ProfileScreen(navController: NavHostController) {
                         contentAlignment = Alignment.TopCenter
                     ) {
                         ProfileImageWithCamera(
-                            profileImage = profileImageUri?.let { rememberAsyncImagePainter(it) }
-                                ?: painterResource(id = R.drawable.profile_ic_image),
+                            profileImage = when {
+                                profileImageUri != null -> rememberAsyncImagePainter(profileImageUri) // user picked image
+                                !profileImageUrl.isNullOrEmpty() -> rememberAsyncImagePainter(profileImageUrl) // from API
+                                else -> painterResource(id = R.drawable.profile_ic_image) // fallback
+                            },
                             cameraIcon = painterResource(id = R.drawable.cam_ic),
                             onCameraClick = {
                                 showImagePickerDialog = true
                             }
                         )
+
                     }
 
                     if (showImagePickerDialog) {
@@ -237,7 +383,10 @@ fun ProfileScreen(navController: NavHostController) {
                         onValueChange = { email = it },
                         icon = painterResource(id = R.drawable.email_ic),
                         isEditable = clickedEdit,
-                        showEditIcon = clickedEdit
+                        showEditIcon = clickedEdit,
+                        onVerifyClick = {
+                            verifyingField = VerificationType.EMAIL
+                            showVerifyDialog = true }
                     )
 
                     Spacer(Modifier.height(5.dp))
@@ -248,7 +397,12 @@ fun ProfileScreen(navController: NavHostController) {
                         onValueChange = { phone = it },
                         icon = painterResource(id = R.drawable.call_ic),
                         isEditable = clickedEdit,
-                        showEditIcon = clickedEdit
+                        showEditIcon = clickedEdit,
+                        onVerifyClick = {
+                            otpViewModel.sendPhoneOtp(phone)
+                            verifyingField = VerificationType.PHONE
+                            showVerifyDialog = true
+                        }
                     )
 
                     Spacer(Modifier.height(5.dp))
@@ -270,8 +424,16 @@ fun ProfileScreen(navController: NavHostController) {
                     SubmitButton(
                         text = "Save Changes",
                         onClick = {
+                            val imagePart = uriToMultipart(context, profileImageUri)
+                            viewModel.editProfile(
+                                id = sessionManager.getUserId().toString(),
+                                name = name,
+                                email = email,
+                                phone = phone,
+                                location = location,
+                                profileImage = imagePart
+                            )
                             clickedEdit = false
-                            // Handle save click
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -280,10 +442,69 @@ fun ProfileScreen(navController: NavHostController) {
                         fontSize = 20
                     )
                 }
+
+                if (showVerifyDialog) {
+                    val title = when (verifyingField) {
+                        VerificationType.EMAIL -> "Verify Email"
+                        VerificationType.PHONE -> "Verify Phone"
+                        else -> ""
+                    }
+
+                    val content = when (verifyingField) {
+                        VerificationType.EMAIL -> "Enter the OTP sent to your email."
+                        VerificationType.PHONE -> "Enter the OTP sent to your phone."
+                        else -> ""
+                    }
+
+                    VerifyOTPDialog(
+                        onDismiss = {
+                            showVerifyDialog = false
+                            otp = ""
+                        },
+                        otpText = otp,
+                        onOtpTextChange = { otp = it },
+                        onYesClick = {
+                            if (otp.isEmpty() || otp.length < 6) {
+                                Toast.makeText(context, ErrorMessage.INVALID_OTP, Toast.LENGTH_SHORT).show()
+                                return@VerifyOTPDialog
+                            }else{
+                                if (verifyingField == VerificationType.PHONE) {
+                                    otpViewModel.verifyPhoneOtp(phone,otp)
+                                }else{
+//                                    otpViewModel.verifyOtpApi(email,otp)
+
+                                }
+                            }
+                        },
+                        onNoClick = {
+                            showVerifyDialog = false
+                            otp = ""
+                        },
+                        description = title,
+                        content = content,
+                        icon = R.drawable.tick_ic,
+                        lButtonText = "Verify",
+                        rButtonText = "Cancel"
+                    )
+                }
+
             }
         }
     }
 }
+
+fun uriToMultipart(context: Context, uri: Uri?, partName: String = "profileImage"): MultipartBody.Part? {
+    uri ?: return null
+    val contentResolver = context.contentResolver
+    val fileType = contentResolver.getType(uri) ?: "image/*"
+    val inputStream = contentResolver.openInputStream(uri) ?: return null
+    val tempFile = File.createTempFile("upload_", ".jpg", context.cacheDir)
+    tempFile.outputStream().use { inputStream.copyTo(it) }
+
+    val requestFile = tempFile.asRequestBody(fileType.toMediaTypeOrNull())
+    return MultipartBody.Part.createFormData(partName, tempFile.name, requestFile)
+}
+
 
 @Composable
 fun ProfileImageWithCamera(

@@ -26,9 +26,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,24 +50,91 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.bussiness.composeseniorcare.R
+import com.bussiness.composeseniorcare.navigation.Routes
+import com.bussiness.composeseniorcare.ui.component.AppLoader
+import com.bussiness.composeseniorcare.ui.component.ErrorDialog
 import com.bussiness.composeseniorcare.ui.component.LongMessageTextBox
-import com.bussiness.composeseniorcare.ui.component.SharpEdgeButton
-import com.bussiness.composeseniorcare.ui.component.SubmitButton
 import com.bussiness.composeseniorcare.ui.component.SubmitButtonSharp
 import com.bussiness.composeseniorcare.ui.component.TopHeadingText
 import com.bussiness.composeseniorcare.ui.screen.mainflow.TextSection
 import com.bussiness.composeseniorcare.ui.theme.Redish
+import com.bussiness.composeseniorcare.util.ErrorMessage
+import com.bussiness.composeseniorcare.util.UiState
+import com.bussiness.composeseniorcare.viewmodel.CommonViewModel
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.collectAsState
+
 
 @Composable
-fun ContactUs(navController: NavHostController) {
+fun ContactUs(navController: NavHostController, ) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
     var showError by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    var isSubmitting by remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+    val context = LocalContext.current
+
+    val viewModel: CommonViewModel = hiltViewModel()
+
+    val state = viewModel.getUiState("contactUs").value
+
+
+    LaunchedEffect(state) {
+        when (state) {
+            is UiState.Success -> {
+                val response = state.data
+                Toast.makeText(context, response.message, Toast.LENGTH_SHORT).show()
+                viewModel.resetState("contactUs")
+                navController.navigate(Routes.HOME_SCREEN) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+
+            is UiState.Error -> {
+                errorMessage = state.message
+                showDialog = true
+                viewModel.resetState("contactUs")
+            }
+
+            is UiState.NoInternet -> {
+                errorMessage = ErrorMessage.NO_INTERNET
+                showDialog = true
+                viewModel.resetState("contactUs")
+            }
+
+            else -> Unit
+        }
+    }
+
+
+    if ( state is UiState.Loading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.3f))
+                .zIndex(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            AppLoader()
+        }
+    }
+
+    if (showDialog) {
+        ErrorDialog(
+            message = errorMessage,
+            onConfirm = { showDialog = false },
+            onDismiss = { showDialog = false }
+        )
+    }
 
     Box(
         modifier = Modifier
@@ -120,9 +189,13 @@ fun ContactUs(navController: NavHostController) {
                     onClick = {
                         if (name.isBlank() || email.isBlank() || phoneNumber.isBlank() || message.isBlank()) {
                             showError = true
-                        } else {
+                        } else if (!isSubmitting) {
                             showError = false
-
+                            isSubmitting = true
+                            coroutineScope.launch {
+                                viewModel.contactUsApi(name, email, phoneNumber, message)
+                                isSubmitting = false
+                            }
                         }
                     },
                     fontSize = 18

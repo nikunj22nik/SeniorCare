@@ -85,7 +85,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     //navigation
     implementation(libs.androidx.navigation.compose)
-
     implementation (libs.androidx.material.icons.extended)
     //material3
     implementation(libs.material3)
@@ -101,32 +100,18 @@ dependencies {
     // Hilt
     implementation(libs.hilt.android)
     kapt(libs.hilt.android.compiler)
-
     // Optional: Hilt + Jetpack Compose
     implementation(libs.androidx.hilt.navigation.compose)
     kapt(libs.androidx.hilt.compiler)
-
     // Retrofit + OkHttp
     implementation (libs.retrofit)
     implementation (libs.converter.gson)
     implementation (libs.logging.interceptor)
-
     // Network monitoring
     implementation (libs.androidx.lifecycle.runtime.ktx.v291)
     implementation (libs.androidx.runtime.livedata)
-    //
+    //loader
     implementation (libs.lottie.compose)
-
-
-
-
-
-
-
-
-
-
-
 
 
 }
