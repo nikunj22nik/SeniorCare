@@ -1,9 +1,11 @@
 package com.bussiness.composeseniorcare.apiservice
 
 import com.bussiness.composeseniorcare.model.CommonResponseModel
+import com.bussiness.composeseniorcare.model.FAQModel
 import com.bussiness.composeseniorcare.model.LoginResponse
 import com.bussiness.composeseniorcare.model.ProfileModel
 import com.bussiness.composeseniorcare.model.Register
+import com.bussiness.composeseniorcare.model.SavedFacilityModel
 import com.bussiness.composeseniorcare.util.UiState
 import kotlinx.coroutines.flow.Flow
 import okhttp3.MultipartBody
@@ -35,5 +37,13 @@ interface ApiRepository {
     fun verifyPhoneOtpApi(otp: String, phone: String): Flow<UiState<CommonResponseModel>>
 
     fun contactUsApi(name: String, email: String, phone: String, message: String): Flow<UiState<CommonResponseModel>>
+
+    fun faqApi(): Flow<UiState<FAQModel>>
+
+    fun sendOtpToEmailApi(email: String): Flow<UiState<CommonResponseModel>>
+
+    fun verifyEmailOtpApi(otp: String, email: String): Flow<UiState<CommonResponseModel>>
+
+    fun savedFacilitiesApi(id: String): Flow<UiState<SavedFacilityModel>>
 
 }

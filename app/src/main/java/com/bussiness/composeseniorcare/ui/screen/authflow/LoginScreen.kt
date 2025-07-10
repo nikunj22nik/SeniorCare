@@ -92,9 +92,9 @@ fun LoginScreen(
         when (state) {
             is UiState.Success -> {
                 val response = state.data
-                val userId = response.user.id ?: -1
+                val userId = response.data?.id ?: -1
                 val token = response.token ?: ""
-                val email = response.user.email ?: ""
+                val email = response.data?.email ?: ""
 
                 sessionManager.setLogin(true)
                 sessionManager.setSkipLogin(false)

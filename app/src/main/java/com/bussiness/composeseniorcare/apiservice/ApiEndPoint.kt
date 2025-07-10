@@ -14,5 +14,10 @@ object ApiEndPoint {
     const val SEND_PHONE_OTP = "send-phone-otp"
     const val VERIFY_PHONE = "verify-phone"
     const val CONTACT_US = "contact-us"
+    const val FAQ = "faq"
+    const val SEND_OTP_TO_EMAIL = "send-otp-to-email"
+    const val VERIFY_EMAIL = "verify-email"
+    const val SAVED_FACILITIES = "saved-facilities"
+    const val FACILITIES_LIST = "facility-list"
 
 }

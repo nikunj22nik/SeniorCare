@@ -46,6 +46,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -86,6 +87,7 @@ import com.bussiness.composeseniorcare.util.SessionManager
 import com.bussiness.composeseniorcare.util.UiState
 import com.bussiness.composeseniorcare.viewmodel.ProfileViewModel
 import com.bussiness.composeseniorcare.viewmodel.VerifyOTPViewModel
+import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -112,12 +114,16 @@ fun ProfileScreen(navController: NavHostController) {
     var showVerifyDialog by remember { mutableStateOf(false) }
     var otp by remember { mutableStateOf("") }
     var verifyingField by remember { mutableStateOf<VerificationType?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+
 
     // API states
     val getProfileState = viewModel.getUiState("getProfile").value
     val editProfileState = viewModel.getUiState("editProfile").value
     val sendPhoneOtpState = otpViewModel.getUiState("sendPhoneOtp").value
     val verifyPhoneOtpState = otpViewModel.getUiState("verifyPhoneOtp").value
+    val sendEmailOtpState = otpViewModel.getUiState("sendEmailOtp").value
+    val verifyEmailOtpState = otpViewModel.getUiState("verifyEmailOtp").value
 
     // Initial Profile Load
     LaunchedEffect(Unit) {
@@ -125,15 +131,25 @@ fun ProfileScreen(navController: NavHostController) {
     }
 
     //  Handle Profile Get Response
-    LaunchedEffect(getProfileState, editProfileState, sendPhoneOtpState,verifyPhoneOtpState) {
+    LaunchedEffect(getProfileState, editProfileState, sendPhoneOtpState,verifyPhoneOtpState,sendEmailOtpState,verifyEmailOtpState) {
         when {
             getProfileState is UiState.Success -> {
                 val profile = getProfileState.data.data
-                name = profile.name
-                email = profile.email
-                phone = profile.phone
-                location = profile.location
-                profileImageUrl = profile.profileImage
+                if (profile != null) {
+                    name = profile.name.toString()
+                }
+                if (profile != null) {
+                    email = profile.email.toString()
+                }
+                if (profile != null) {
+                    phone = profile.phone.toString()
+                }
+                if (profile != null) {
+                    location = profile.location.toString()
+                }
+                if (profile != null) {
+                    profileImageUrl = profile.profileImage
+                }
                 viewModel.resetState("getProfile")
             }
 
@@ -169,83 +185,108 @@ fun ProfileScreen(navController: NavHostController) {
 
             sendPhoneOtpState is UiState.Success -> {
                 Toast.makeText(context, "OTP sent", Toast.LENGTH_SHORT).show()
-                viewModel.resetState("sendPhoneOtp")
+                otpViewModel.resetState("sendPhoneOtp")
             }
 
             sendPhoneOtpState is UiState.Error -> {
                 errorMessage = sendPhoneOtpState.message
                 showDialog = true
-                viewModel.resetState("sendPhoneOtp")
+                otpViewModel.resetState("sendPhoneOtp")
             }
 
             sendPhoneOtpState == UiState.NoInternet -> {
                 errorMessage = ErrorMessage.NO_INTERNET
                 showDialog = true
-                viewModel.resetState("sendPhoneOtp")
+                otpViewModel.resetState("sendPhoneOtp")
             }
 
             verifyPhoneOtpState is UiState.Success -> {
                 Toast.makeText(context, "OTP verified", Toast.LENGTH_SHORT).show()
                 showVerifyDialog = false
                 otp = ""
-                viewModel.resetState("verifyPhoneOtp")
+                otpViewModel.resetState("verifyPhoneOtp")
             }
 
             verifyPhoneOtpState is UiState.Error -> {
                 errorMessage = verifyPhoneOtpState.message
                 showDialog = true
-                viewModel.resetState("verifyPhoneOtp")
+                otpViewModel.resetState("verifyPhoneOtp")
             }
 
             verifyPhoneOtpState == UiState.NoInternet -> {
                 errorMessage = ErrorMessage.NO_INTERNET
                 showDialog = true
-                viewModel.resetState("verifyPhoneOtp")
+                otpViewModel.resetState("verifyPhoneOtp")
             }
+
+            sendEmailOtpState is UiState.Success -> {
+                Toast.makeText(context, "OTP sent to your mail.", Toast.LENGTH_SHORT).show()
+                otpViewModel.resetState("sendEmailOtp")
+            }
+
+            sendEmailOtpState is UiState.Error -> {
+                errorMessage = sendEmailOtpState.message
+                showDialog = true
+                otpViewModel.resetState("sendEmailOtp")
+            }
+
+            sendEmailOtpState is UiState.NoInternet -> {
+                errorMessage = ErrorMessage.NO_INTERNET
+                showDialog = true
+                otpViewModel.resetState("sendEmailOtp")
+            }
+
+            verifyEmailOtpState is UiState.Success -> {
+                Toast.makeText(context, "OTP verified", Toast.LENGTH_SHORT).show()
+                showVerifyDialog = false
+                otp = ""
+                otpViewModel.resetState("verifyEmailOtp")
+            }
+
+            verifyEmailOtpState is UiState.Error -> {
+                errorMessage = verifyEmailOtpState.message
+                showDialog = true
+                otpViewModel.resetState("verifyEmailOtp")
+            }
+
+            verifyEmailOtpState is UiState.NoInternet -> {
+                errorMessage = ErrorMessage.NO_INTERNET
+                showDialog = true
+                otpViewModel.resetState("verifyEmailOtp")
+            }
+
         }
     }
 
-
     // Show loader if any operation is in progress
     if (getProfileState is UiState.Loading || editProfileState is UiState.Loading || sendPhoneOtpState is UiState.Loading
-        || verifyPhoneOtpState is UiState.Loading) {
+        || verifyPhoneOtpState is UiState.Loading || sendEmailOtpState is UiState.Loading || verifyEmailOtpState is UiState.Loading) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.3f))
-                .zIndex(1f),
-            contentAlignment = Alignment.Center
+            modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)).zIndex(1f), contentAlignment = Alignment.Center
         ) {
             AppLoader()
         }
     }
 
     if (showDialog) {
-        ErrorDialog(
-            message = errorMessage,
-            onConfirm = { showDialog = false },
-            onDismiss = { showDialog = false }
-        )
+        ErrorDialog(message = errorMessage, onConfirm = { showDialog = false }, onDismiss = { showDialog = false })
     }
 
-    val launcherGallery = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
+    val launcherGallery = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) {
+        uri: Uri? ->
         profileImageUri = uri
     }
 
-    val launcherCamera = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview()
-    ) { bitmap: Bitmap? ->
+    val launcherCamera = rememberLauncherForActivityResult(contract = ActivityResultContracts.TakePicturePreview()) {
+        bitmap: Bitmap? ->
         bitmap?.let {
             val uri = saveBitmapToCache(context, it)
             profileImageUri = uri
         }
     }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        isGranted ->
         if (isGranted) {
             launcherCamera.launch(null) // Launch camera if permission granted
         } else {
@@ -265,28 +306,16 @@ fun ProfileScreen(navController: NavHostController) {
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
             .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFFFFFFFF),
-                        Color(0xFF5C2C4D),
-                        Color(0xFF5C2C4D)
-                    )
-                )
+                Brush.verticalGradient(colors = listOf(Color(0xFFFFFFFF), Color(0xFF5C2C4D), Color(0xFF5C2C4D)))
             )
     ) {
-        TopHeadingText(
-            text = "Profile",
-            onBackPress = { navController.navigate(Routes.HOME_SCREEN) },
-            modifier = Modifier
-        )
+        TopHeadingText(text = "Profile", onBackPress = { navController.navigate(Routes.HOME_SCREEN) }, modifier = Modifier)
 
         BackHandler {
             navController.navigate(Routes.HOME_SCREEN)
         }
-
 
         Box(
             modifier = Modifier
@@ -311,9 +340,7 @@ fun ProfileScreen(navController: NavHostController) {
                     verticalArrangement = Arrangement.Top
                 ) {
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 28.dp),
+                        modifier = Modifier.fillMaxWidth().padding(top = 28.dp),
                         contentAlignment = Alignment.TopCenter
                     ) {
                         ProfileImageWithCamera(
@@ -327,7 +354,6 @@ fun ProfileScreen(navController: NavHostController) {
                                 showImagePickerDialog = true
                             }
                         )
-
                     }
 
                     if (showImagePickerDialog) {
@@ -353,15 +379,11 @@ fun ProfileScreen(navController: NavHostController) {
                     // Show "Edit Profile" only if not editing
                     if (!clickedEdit) {
                         Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 5.dp),
+                            modifier = Modifier.fillMaxWidth().padding(top = 5.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             EditProfileButton(
-                                onClick = {
-                                    clickedEdit = true
-                                }
+                                onClick = { clickedEdit = true }
                             )
                         }
                     }
@@ -385,6 +407,7 @@ fun ProfileScreen(navController: NavHostController) {
                         isEditable = clickedEdit,
                         showEditIcon = clickedEdit,
                         onVerifyClick = {
+                            otpViewModel.sendEmailOtp(email)
                             verifyingField = VerificationType.EMAIL
                             showVerifyDialog = true }
                     )
@@ -467,12 +490,13 @@ fun ProfileScreen(navController: NavHostController) {
                             if (otp.isEmpty() || otp.length < 6) {
                                 Toast.makeText(context, ErrorMessage.INVALID_OTP, Toast.LENGTH_SHORT).show()
                                 return@VerifyOTPDialog
-                            }else{
-                                if (verifyingField == VerificationType.PHONE) {
-                                    otpViewModel.verifyPhoneOtp(phone,otp)
-                                }else{
-//                                    otpViewModel.verifyOtpApi(email,otp)
-
+                            } else {
+                                coroutineScope.launch {
+                                    if (verifyingField == VerificationType.PHONE) {
+                                        otpViewModel.verifyPhoneOtp(phone, otp)
+                                    } else {
+                                        otpViewModel.verifyEmailOtp(otp, email)
+                                    }
                                 }
                             }
                         },

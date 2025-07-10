@@ -1,9 +1,11 @@
 package com.bussiness.composeseniorcare.apiservice
 
 import com.bussiness.composeseniorcare.model.CommonResponseModel
+import com.bussiness.composeseniorcare.model.FAQModel
 import com.bussiness.composeseniorcare.model.LoginResponse
 import com.bussiness.composeseniorcare.model.ProfileModel
 import com.bussiness.composeseniorcare.model.Register
+import com.bussiness.composeseniorcare.model.SavedFacilityModel
 import com.bussiness.composeseniorcare.util.AppConstant
 import com.bussiness.composeseniorcare.util.ErrorHandler
 import com.bussiness.composeseniorcare.util.ErrorMessage
@@ -34,7 +36,7 @@ class RepositoryImpl @Inject constructor(
             val response = api.loginApiRequest(emailOrPhone, password, deviceType)
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.status) {
+                if (body != null && body.status == true) {
                     emit(UiState.Success(body)) //  Only emit if status == true
                 } else {
                     emit(UiState.Error(body?.message ?: ErrorMessage.API_ERROR))
@@ -49,7 +51,7 @@ class RepositoryImpl @Inject constructor(
                 } catch (e: Exception) {
                     ErrorMessage.SERVER_ERROR
                 }
-                emit(UiState.Error(errorMessage))
+                errorMessage?.let { UiState.Error(it) }?.let { emit(it) }
             }
         } catch (e: Exception) {
             emit(UiState.Error(e.localizedMessage ?: ErrorMessage.CATCH_ERROR))
@@ -62,7 +64,7 @@ class RepositoryImpl @Inject constructor(
             val response = api.forgotPasswordApi(emailOrPhone)
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.status) {
+                if (body != null && body.status == true) {
                     emit(UiState.Success(body))
                 } else {
                     emit(UiState.Error(body?.message ?: ErrorMessage.API_ERROR))
@@ -77,7 +79,7 @@ class RepositoryImpl @Inject constructor(
                 } catch (e: Exception) {
                     ErrorMessage.SERVER_ERROR
                 }
-                emit(UiState.Error(errorMessage))
+                errorMessage?.let { UiState.Error(it) }?.let { emit(it) }
             }
         } catch (e: Exception) {
             emit(UiState.Error(e.localizedMessage ?: ErrorMessage.CATCH_ERROR))
@@ -90,7 +92,7 @@ class RepositoryImpl @Inject constructor(
             val response = api.verifyOTPApi(emailOrPhone,otp)
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.status) {
+                if (body != null && body.status == true) {
                     emit(UiState.Success(body)) //  Only emit if status == true
                 } else {
                     emit(UiState.Error(body?.message ?: ErrorMessage.API_ERROR))
@@ -105,7 +107,7 @@ class RepositoryImpl @Inject constructor(
                 } catch (e: Exception) {
                     ErrorMessage.SERVER_ERROR
                 }
-                emit(UiState.Error(errorMessage))
+                errorMessage?.let { UiState.Error(it) }?.let { emit(it) }
             }
         } catch (e: Exception) {
             emit(UiState.Error(e.localizedMessage ?: ErrorMessage.CATCH_ERROR))
@@ -152,7 +154,7 @@ class RepositoryImpl @Inject constructor(
             val response = api.resendVerifyOTPApi(emailOrPhone)
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.status) {
+                if (body != null && body.status == true) {
                     emit(UiState.Success(body))
                 } else {
                     emit(UiState.Error(body?.message ?: ErrorMessage.API_ERROR))
@@ -167,7 +169,7 @@ class RepositoryImpl @Inject constructor(
                 } catch (e: Exception) {
                     ErrorMessage.SERVER_ERROR
                 }
-                emit(UiState.Error(errorMessage))
+                errorMessage?.let { UiState.Error(it) }?.let { emit(it) }
             }
         } catch (e: Exception) {
             emit(UiState.Error(e.localizedMessage ?: ErrorMessage.CATCH_ERROR))
@@ -183,7 +185,7 @@ class RepositoryImpl @Inject constructor(
             val response = api.createPasswordApi(emailOrPhone,password)
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.status) {
+                if (body != null && body.status == true) {
                     emit(UiState.Success(body))
                 } else {
                     emit(UiState.Error(body?.message ?: ErrorMessage.API_ERROR))
@@ -198,7 +200,7 @@ class RepositoryImpl @Inject constructor(
                 } catch (e: Exception) {
                     ErrorMessage.SERVER_ERROR
                 }
-                emit(UiState.Error(errorMessage))
+                errorMessage?.let { UiState.Error(it) }?.let { emit(it) }
             }
         } catch (e: Exception) {
             emit(UiState.Error(e.localizedMessage ?: ErrorMessage.CATCH_ERROR))
@@ -211,7 +213,7 @@ class RepositoryImpl @Inject constructor(
             val response = api.logoutApi(id)
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.status) {
+                if (body != null && body.status == true) {
                     emit(UiState.Success(body))
                 } else {
                     emit(UiState.Error(body?.message ?: ErrorMessage.API_ERROR))
@@ -226,7 +228,7 @@ class RepositoryImpl @Inject constructor(
                 } catch (e: Exception) {
                     ErrorMessage.SERVER_ERROR
                 }
-                emit(UiState.Error(errorMessage))
+                errorMessage?.let { UiState.Error(it) }?.let { emit(it) }
             }
         } catch (e: Exception) {
             emit(UiState.Error(e.localizedMessage ?: ErrorMessage.CATCH_ERROR))
@@ -239,7 +241,7 @@ class RepositoryImpl @Inject constructor(
             val response = api.getProfileApi(id)
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.status) {
+                if (body != null && body.status == true) {
                     emit(UiState.Success(body))
                 } else {
                     emit(UiState.Error(body?.message ?: ErrorMessage.API_ERROR))
@@ -254,7 +256,7 @@ class RepositoryImpl @Inject constructor(
                 } catch (e: Exception) {
                     ErrorMessage.SERVER_ERROR
                 }
-                emit(UiState.Error(errorMessage))
+                errorMessage?.let { UiState.Error(it) }?.let { emit(it) }
             }
         } catch (e: Exception) {
             emit(UiState.Error(e.localizedMessage ?: ErrorMessage.CATCH_ERROR))
@@ -275,7 +277,7 @@ class RepositoryImpl @Inject constructor(
 
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.status) {
+                if (body != null && body.status == true) {
                     emit(UiState.Success(body))
                 } else {
                     emit(UiState.Error(body?.message ?: ErrorMessage.API_ERROR))
@@ -288,7 +290,7 @@ class RepositoryImpl @Inject constructor(
                 } catch (e: Exception) {
                     ErrorMessage.SERVER_ERROR
                 }
-                emit(UiState.Error(errorMessage))
+                errorMessage?.let { UiState.Error(it) }?.let { emit(it) }
             }
         } catch (e: Exception) {
             emit(UiState.Error(e.localizedMessage ?: ErrorMessage.CATCH_ERROR))
@@ -301,7 +303,7 @@ class RepositoryImpl @Inject constructor(
             val response = api.sendPhoneOtpApi(phone)
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.status) {
+                if (body != null && body.status == true) {
                     emit(UiState.Success(body))
                 } else {
                     emit(UiState.Error(body?.message ?: ErrorMessage.API_ERROR))
@@ -316,7 +318,7 @@ class RepositoryImpl @Inject constructor(
                 } catch (e: Exception) {
                     ErrorMessage.SERVER_ERROR
                 }
-                emit(UiState.Error(errorMessage))
+                errorMessage?.let { UiState.Error(it) }?.let { emit(it) }
             }
         } catch (e: Exception) {
             emit(UiState.Error(e.localizedMessage ?: ErrorMessage.CATCH_ERROR))
@@ -329,7 +331,7 @@ class RepositoryImpl @Inject constructor(
             val response = api.verifyPhoneOtpApi(otp,phone)
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.status) {
+                if (body != null && body.status == true) {
                     emit(UiState.Success(body))
                 } else {
                     emit(UiState.Error(body?.message ?: ErrorMessage.API_ERROR))
@@ -344,7 +346,7 @@ class RepositoryImpl @Inject constructor(
                 } catch (e: Exception) {
                     ErrorMessage.SERVER_ERROR
                 }
-                emit(UiState.Error(errorMessage))
+                errorMessage?.let { UiState.Error(it) }?.let { emit(it) }
             }
         } catch (e: Exception) {
             emit(UiState.Error(e.localizedMessage ?: ErrorMessage.CATCH_ERROR))
@@ -362,7 +364,7 @@ class RepositoryImpl @Inject constructor(
             val response = api.contactUsApi(name,email,phone,message)
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.status) {
+                if (body != null && body.status == true) {
                     emit(UiState.Success(body))
                 } else {
                     emit(UiState.Error(body?.message ?: ErrorMessage.API_ERROR))
@@ -377,7 +379,119 @@ class RepositoryImpl @Inject constructor(
                 } catch (e: Exception) {
                     ErrorMessage.SERVER_ERROR
                 }
-                emit(UiState.Error(errorMessage))
+                errorMessage?.let { UiState.Error(it) }?.let { emit(it) }
+            }
+        } catch (e: Exception) {
+            emit(UiState.Error(e.localizedMessage ?: ErrorMessage.CATCH_ERROR))
+        }
+    }
+
+    override fun faqApi(): Flow<UiState<FAQModel>> = flow{
+        emit(UiState.Loading)
+        try {
+            val response = api.faqApi()
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.status == true) {
+                    emit(UiState.Success(body))
+                } else {
+                    emit(UiState.Error(body?.message ?: ErrorMessage.API_ERROR))
+                }
+            }  else {
+                // Parse error body
+                val errorBody = response.errorBody()?.string()
+                val errorMessage = try {
+                    val gson = Gson()
+                    val errorResponse = gson.fromJson(errorBody, FAQModel::class.java)
+                    errorResponse.message
+                } catch (e: Exception) {
+                    ErrorMessage.SERVER_ERROR
+                }
+                errorMessage?.let { UiState.Error(it) }?.let { emit(it) }
+            }
+        } catch (e: Exception) {
+            emit(UiState.Error(e.localizedMessage ?: ErrorMessage.CATCH_ERROR))
+        }
+    }
+
+    override fun sendOtpToEmailApi(email: String): Flow<UiState<CommonResponseModel>> = flow {
+        emit(UiState.Loading)
+        try {
+            val response = api.sendOtpToEmailApi(email)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.status == true) {
+                    emit(UiState.Success(body))
+                } else {
+                    emit(UiState.Error(body?.message ?: ErrorMessage.API_ERROR))
+                }
+            }  else {
+                // Parse error body
+                val errorBody = response.errorBody()?.string()
+                val errorMessage = try {
+                    val gson = Gson()
+                    val errorResponse = gson.fromJson(errorBody, CommonResponseModel::class.java)
+                    errorResponse.message
+                } catch (e: Exception) {
+                    ErrorMessage.SERVER_ERROR
+                }
+                errorMessage?.let { UiState.Error(it) }?.let { emit(it) }
+            }
+        } catch (e: Exception) {
+            emit(UiState.Error(e.localizedMessage ?: ErrorMessage.CATCH_ERROR))
+        }
+    }
+
+    override fun verifyEmailOtpApi(otp: String, email: String): Flow<UiState<CommonResponseModel>> = flow {
+        emit(UiState.Loading)
+        try {
+            val response = api.verifyEmailOtpApi(otp,email)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.status == true) {
+                    emit(UiState.Success(body))
+                } else {
+                    emit(UiState.Error(body?.message ?: ErrorMessage.API_ERROR))
+                }
+            }  else {
+                // Parse error body
+                val errorBody = response.errorBody()?.string()
+                val errorMessage = try {
+                    val gson = Gson()
+                    val errorResponse = gson.fromJson(errorBody, CommonResponseModel::class.java)
+                    errorResponse.message
+                } catch (e: Exception) {
+                    ErrorMessage.SERVER_ERROR
+                }
+                errorMessage?.let { UiState.Error(it) }?.let { emit(it) }
+            }
+        } catch (e: Exception) {
+            emit(UiState.Error(e.localizedMessage ?: ErrorMessage.CATCH_ERROR))
+        }
+    }
+
+    override fun savedFacilitiesApi(id: String): Flow<UiState<SavedFacilityModel>> = flow {
+        emit(UiState.Loading)
+        try {
+            val response = api.savedFacilitiesApi(id)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.status == true) {
+                    emit(UiState.Success(body))
+                } else {
+                    emit(UiState.Error(body?.message ?: ErrorMessage.API_ERROR))
+                }
+            }  else {
+                // Parse error body
+                val errorBody = response.errorBody()?.string()
+                val errorMessage = try {
+                    val gson = Gson()
+                    val errorResponse = gson.fromJson(errorBody, CommonResponseModel::class.java)
+                    errorResponse.message
+                } catch (e: Exception) {
+                    ErrorMessage.SERVER_ERROR
+                }
+                errorMessage?.let { UiState.Error(it) }?.let { emit(it) }
             }
         } catch (e: Exception) {
             emit(UiState.Error(e.localizedMessage ?: ErrorMessage.CATCH_ERROR))

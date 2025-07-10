@@ -3,7 +3,17 @@ package com.bussiness.composeseniorcare.ui.screen.sidenavmenu
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,8 +22,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,31 +40,83 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.bussiness.composeseniorcare.R
-import com.bussiness.composeseniorcare.data.model.FAQItem
+import com.bussiness.composeseniorcare.model.Data
+import com.bussiness.composeseniorcare.ui.component.AppLoader
+import com.bussiness.composeseniorcare.ui.component.ErrorDialog
 import com.bussiness.composeseniorcare.ui.component.TopHeadingText
 import com.bussiness.composeseniorcare.ui.screen.mainflow.TextSection
+import com.bussiness.composeseniorcare.util.ErrorMessage
+import com.bussiness.composeseniorcare.util.UiState
+import com.bussiness.composeseniorcare.viewmodel.FAQViewModel
 
 private val Poppins = FontFamily(Font(R.font.poppins))
 
 @Composable
 fun FAQScreen(navController: NavHostController) {
-    val faqList = listOf(
-        FAQItem(1, "How do I know if my loved one needs home care services?",
-            "You can start by scheduling a free consultation. We will assess your loved one's needs and recommend a customized care plan."),
-        FAQItem(2, "What services do you provide?",
-            "We offer personal care, medication management, companionship, and more customized to your needs."),
-        FAQItem(3, "Is your staff trained?",
-            "Yes, all our caregivers are trained, background-checked, and insured professionals."),
-        FAQItem(4, "How do you customize the care plan?",
-            "We tailor it based on individual needs assessed during the initial consultation."),
-        FAQItem(5, "Can I change the schedule later?",
-            "Absolutely. Our care plans are flexible and adjustable based on your requirements.")
-    )
+    val viewModel: FAQViewModel = hiltViewModel()
+    val state = viewModel.uiState.value
 
     val expandedItemId = remember { mutableStateOf<Int?>(null) }
+    var showDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+
+    // Initially empty list, will fill from API
+    var faqList by remember { mutableStateOf<List<Data>>(emptyList()) }
+
+    // Call API on first load
+    LaunchedEffect(Unit) {
+        viewModel.faqApi()
+    }
+
+    // Observe state and update faqList / show dialog
+    LaunchedEffect(state) {
+        when (state) {
+            is UiState.Success -> {
+                val response = state.data
+                faqList = response.data!!
+                viewModel.resetState()
+            }
+
+            is UiState.Error -> {
+                errorMessage = state.message
+                showDialog = true
+                viewModel.resetState()
+            }
+
+            is UiState.NoInternet -> {
+                errorMessage = ErrorMessage.NO_INTERNET
+                showDialog = true
+                viewModel.resetState()
+            }
+
+            else -> Unit
+        }
+    }
+
+    if (state is UiState.Loading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.3f))
+                .zIndex(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            AppLoader()
+        }
+    }
+
+    if (showDialog) {
+        ErrorDialog(
+            message = errorMessage,
+            onConfirm = { showDialog = false },
+            onDismiss = { showDialog = false }
+        )
+    }
 
     Box(
         modifier = Modifier
@@ -79,40 +144,43 @@ fun FAQScreen(navController: NavHostController) {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 20.dp, vertical = 15.dp),
-                verticalArrangement = Arrangement.Top,
-                content = {
-                    item {
-                        TextSection(
-                            title = "Frequently Asked Questions",
-                            modifier = Modifier.padding(vertical = 10.dp),
-                            fontSize = 22,
-                            fontFamily = Poppins,
-                            fontWeight = FontWeight.Bold
-                        )
-                        TextSection(
-                            title = "Lorem ipsum dolor sit amet consectetur. Orci malesuada mi et mi pellentesque tincidunt at mollis facilisis. Nisl eu blandit nunc parturient adipiscing commodo.",
-                            fontSize = 14,
-                            fontFamily = Poppins,
-                            fontWeight = FontWeight.Normal
-                        )
-                        Spacer(modifier = Modifier.height(15.dp))
-                    }
+                verticalArrangement = Arrangement.Top
+            ) {
+                item {
+                    TextSection(
+                        title = "Frequently Asked Questions",
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        fontSize = 22,
+                        fontFamily = Poppins,
+                        fontWeight = FontWeight.Bold
+                    )
+                    TextSection(
+                        title = "Lorem ipsum dolor sit amet consectetur. Orci malesuada mi et mi pellentesque tincidunt at mollis facilisis. Nisl eu blandit nunc parturient adipiscing commodo.",
+                        fontSize = 14,
+                        fontFamily = Poppins,
+                        fontWeight = FontWeight.Normal
+                    )
+                    Spacer(modifier = Modifier.height(15.dp))
+                }
 
-                    items(
-                        items = faqList,
-                        key = { it.id }
-                    ) { faq ->
-                        FAQItemView(
-                            question = faq.question,
-                            answer = faq.answer,
-                            isExpanded = expandedItemId.value == faq.id,
-                            onToggle = {
-                                expandedItemId.value = if (expandedItemId.value == faq.id) null else faq.id
-                            }
-                        )
+                items(
+                    items = faqList,
+                    key = { it.id!! }
+                ) { faq ->
+                    faq.question?.let {
+                        faq.answer?.let { it1 ->
+                            FAQItemView(
+                                question = it,
+                                answer = it1,
+                                isExpanded = expandedItemId.value == faq.id,
+                                onToggle = {
+                                    expandedItemId.value = if (expandedItemId.value == faq.id) null else faq.id
+                                }
+                            )
+                        }
                     }
                 }
-            )
+            }
         }
     }
 }

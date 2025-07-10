@@ -1,9 +1,11 @@
 package com.bussiness.composeseniorcare.apiservice
 
 import com.bussiness.composeseniorcare.model.CommonResponseModel
+import com.bussiness.composeseniorcare.model.FAQModel
 import com.bussiness.composeseniorcare.model.LoginResponse
 import com.bussiness.composeseniorcare.model.ProfileModel
 import com.bussiness.composeseniorcare.model.Register
+import com.bussiness.composeseniorcare.model.SavedFacilityModel
 import com.google.gson.JsonObject
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -11,6 +13,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
+import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
@@ -99,6 +102,32 @@ interface ApiListing {
         @Field("message") message: String,
     ): Response<CommonResponseModel>
 
+    @GET(ApiEndPoint.FAQ)
+    suspend fun faqApi(): Response<FAQModel>
 
+    @FormUrlEncoded
+    @POST(ApiEndPoint.SEND_OTP_TO_EMAIL)
+    suspend fun sendOtpToEmailApi(
+        @Field("email") email: String,
+    ): Response<CommonResponseModel>
+
+    @FormUrlEncoded
+    @POST(ApiEndPoint.VERIFY_EMAIL)
+    suspend fun verifyEmailOtpApi(
+        @Field("otp") otp: String,
+        @Field("email") email: String
+    ): Response<CommonResponseModel>
+
+    @FormUrlEncoded
+    @POST(ApiEndPoint.SAVED_FACILITIES)
+    suspend fun savedFacilitiesApi(
+        @Field("id") id: String,
+    ): Response<SavedFacilityModel>
+
+    @FormUrlEncoded
+    @POST(ApiEndPoint.FACILITIES_LIST)
+    suspend fun facilitiesListApi(
+        @Field("id") id: String,
+    ): Response<SavedFacilityModel>
 
 }

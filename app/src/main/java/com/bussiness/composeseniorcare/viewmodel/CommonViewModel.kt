@@ -13,4 +13,8 @@ class CommonViewModel  @Inject constructor(app: Application, private val reposit
     fun contactUsApi(name: String,email: String,phone: String,message: String) {
         launchFlowWithKey("contactUs",repository.contactUsApi(name,email,phone,message))
     }
+
+//    fun faqApi(){
+//        launchFlowWithKey("faq",repository.faqApi())
+//    }
 }
