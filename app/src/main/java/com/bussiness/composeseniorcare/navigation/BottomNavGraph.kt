@@ -6,7 +6,6 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.bussiness.composeseniorcare.data.model.Facility
 import com.bussiness.composeseniorcare.navigation.Routes.FAQ
 import com.bussiness.composeseniorcare.ui.screen.mainflow.CompareFacilities
 import com.bussiness.composeseniorcare.ui.screen.mainflow.FacilityListing
@@ -26,13 +25,12 @@ import com.bussiness.composeseniorcare.ui.screen.sidenavmenu.SubscriptionPlan
 fun BottomNavGraph(
     navController: NavHostController,
     authNavController: NavHostController,
-    savedFacilities: List<Facility>,
     onOpenDrawer: () -> Unit
 ) {
     NavHost(navController, startDestination = Routes.HOME_SCREEN) {
         composable(Routes.HOME_SCREEN) { HomeScreen(authNavController,navController,onOpenDrawer) }
         composable(Routes.COMPARE_FACILITY) { CompareFacilities(navController,onOpenDrawer) }
-        composable(Routes.SAVED_FACILITIES) { SavedFacilities(navController,savedFacilities,onOpenDrawer) }
+        composable(Routes.SAVED_FACILITIES) { SavedFacilities(navController, onOpenDrawer) }
         composable(Routes.PROFILE_SCREEN) { ProfileScreen(navController) }
         composable(Routes.FACILITY_LISTING) { FacilityListing(navController,onOpenDrawer, "") }
         composable(Routes.LISTING_DETAIL) { ListingDetail(navController,onOpenDrawer) }

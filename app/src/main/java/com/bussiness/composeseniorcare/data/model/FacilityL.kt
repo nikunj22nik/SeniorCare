@@ -1,6 +1,6 @@
 package com.bussiness.composeseniorcare.data.model
 
-data class Facility(
+data class FacilityL(
     val imageResId: Int,
     val name: String,
     val location: String,

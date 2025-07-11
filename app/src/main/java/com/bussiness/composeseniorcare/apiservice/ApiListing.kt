@@ -2,6 +2,7 @@ package com.bussiness.composeseniorcare.apiservice
 
 import com.bussiness.composeseniorcare.model.CommonResponseModel
 import com.bussiness.composeseniorcare.model.FAQModel
+import com.bussiness.composeseniorcare.model.FacilityListResponse
 import com.bussiness.composeseniorcare.model.LoginResponse
 import com.bussiness.composeseniorcare.model.ProfileModel
 import com.bussiness.composeseniorcare.model.Register
@@ -28,8 +29,13 @@ interface ApiListing {
         @Field("deviceType") deviceType: String
     ): Response<LoginResponse>
 
+    @FormUrlEncoded
     @POST(ApiEndPoint.REGISTER)
-    suspend fun registerUser(@Body register: Register) : Response<JsonObject>
+    suspend fun signupApiRequest(
+        @Field("email_or_phone") emailOrPhone: String,
+        @Field("password") password: String,
+        @Field("deviceType") deviceType: String
+    ): Response<LoginResponse>
 
     @FormUrlEncoded
     @POST(ApiEndPoint.FORGOT_PASSWORD)
@@ -128,6 +134,21 @@ interface ApiListing {
     @POST(ApiEndPoint.FACILITIES_LIST)
     suspend fun facilitiesListApi(
         @Field("id") id: String,
-    ): Response<SavedFacilityModel>
+    ): Response<FacilityListResponse>
+
+    @FormUrlEncoded
+    @POST(ApiEndPoint.TOGGLE_SAVE_FACILITY)
+    suspend fun toggleSaveFacilityApi(
+        @Field("id") id: String,
+        @Field("f_id") fId: String,
+    ): Response<CommonResponseModel>
+
+    @FormUrlEncoded
+    @POST(ApiEndPoint.FACILITY_DETAIL)
+    suspend fun facilityDetailApi(
+        @Field("id") id: String,
+        @Field("f_id") fId: String,
+    ): Response<CommonResponseModel>
+
 
 }

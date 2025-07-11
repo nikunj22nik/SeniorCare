@@ -2,6 +2,7 @@ package com.bussiness.composeseniorcare.apiservice
 
 import com.bussiness.composeseniorcare.model.CommonResponseModel
 import com.bussiness.composeseniorcare.model.FAQModel
+import com.bussiness.composeseniorcare.model.FacilityListResponse
 import com.bussiness.composeseniorcare.model.LoginResponse
 import com.bussiness.composeseniorcare.model.ProfileModel
 import com.bussiness.composeseniorcare.model.Register
@@ -34,6 +35,38 @@ class RepositoryImpl @Inject constructor(
         emit(UiState.Loading)
         try {
             val response = api.loginApiRequest(emailOrPhone, password, deviceType)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.status == true) {
+                    emit(UiState.Success(body)) //  Only emit if status == true
+                } else {
+                    emit(UiState.Error(body?.message ?: ErrorMessage.API_ERROR))
+                }
+            }  else {
+                // Parse error body
+                val errorBody = response.errorBody()?.string()
+                val errorMessage = try {
+                    val gson = Gson()
+                    val errorResponse = gson.fromJson(errorBody, LoginResponse::class.java)
+                    errorResponse.message
+                } catch (e: Exception) {
+                    ErrorMessage.SERVER_ERROR
+                }
+                errorMessage?.let { UiState.Error(it) }?.let { emit(it) }
+            }
+        } catch (e: Exception) {
+            emit(UiState.Error(e.localizedMessage ?: ErrorMessage.CATCH_ERROR))
+        }
+    }
+
+    override fun signUpApiRequest(
+        emailOrPhone: String,
+        password: String,
+        deviceType: String
+    ): Flow<UiState<LoginResponse>> = flow{
+        emit(UiState.Loading)
+        try {
+            val response = api.signupApiRequest(emailOrPhone, password, deviceType)
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && body.status == true) {
@@ -114,39 +147,6 @@ class RepositoryImpl @Inject constructor(
         }
     }
 
-    override  fun registerUser(register: Register): Flow<UiState<Pair<String, Int>>> = flow {
-        try {
-            api.registerUser(
-                register
-            ).apply {
-                emit(UiState.Loading)
-                if (isSuccessful) {
-                    body()?.let { resp ->
-                        if (resp.has("status") && resp.get("status").asBoolean) {
-                            val token = resp.get("token").asString
-                            val userObj = resp.get("user").asJsonObject
-                            val userId =userObj.get("id").asInt
-                            val p = Pair<String,Int>(token,userId)
-                            emit(UiState.Success<Pair<String,Int>>(p))
-                        } else {
-                            emit(UiState.Error(resp.get("message").asString))
-                        }
-                    } ?: emit(UiState.Error(AppConstant.unKnownError))
-                } else {
-
-                    emit(
-                        UiState.Error(
-                            ErrorHandler.handleErrorBody(
-                                this.errorBody()?.string()
-                            )
-                        )
-                    )
-                }
-            }
-        } catch (e: Exception) {
-            emit(UiState.Error(ErrorHandler.emitError(e)))
-        }
-    }
 
     override fun resendVerifyOTPApi(emailOrPhone: String): Flow<UiState<CommonResponseModel>> = flow {
         emit(UiState.Loading)
@@ -474,6 +474,65 @@ class RepositoryImpl @Inject constructor(
         emit(UiState.Loading)
         try {
             val response = api.savedFacilitiesApi(id)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.status) {
+                    emit(UiState.Success(body))
+                } else {
+                    emit(UiState.Error(body?.message ?: ErrorMessage.API_ERROR))
+                }
+            }  else {
+                // Parse error body
+                val errorBody = response.errorBody()?.string()
+                val errorMessage = try {
+                    val gson = Gson()
+                    val errorResponse = gson.fromJson(errorBody, SavedFacilityModel::class.java)
+                    errorResponse.message
+                } catch (e: Exception) {
+                    ErrorMessage.SERVER_ERROR
+                }
+                errorMessage?.let { UiState.Error(it) }?.let { emit(it) }
+            }
+        } catch (e: Exception) {
+            emit(UiState.Error(e.localizedMessage ?: ErrorMessage.CATCH_ERROR))
+        }
+    }
+
+    override fun facilitiesListApi(id: String): Flow<UiState<FacilityListResponse>> = flow {
+        emit(UiState.Loading)
+        try {
+            val response = api.facilitiesListApi(id)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.status) {
+                    emit(UiState.Success(body))
+                } else {
+                    emit(UiState.Error(body?.message ?: ErrorMessage.API_ERROR))
+                }
+            }  else {
+                // Parse error body
+                val errorBody = response.errorBody()?.string()
+                val errorMessage = try {
+                    val gson = Gson()
+                    val errorResponse = gson.fromJson(errorBody, FacilityListResponse::class.java)
+                    errorResponse.message
+                } catch (e: Exception) {
+                    ErrorMessage.SERVER_ERROR
+                }
+                emit(errorMessage.let { UiState.Error(it) })
+            }
+        } catch (e: Exception) {
+            emit(UiState.Error(e.localizedMessage ?: ErrorMessage.CATCH_ERROR))
+        }
+    }
+
+    override fun toggleSaveFacilityApi(
+        id: String,
+        fId: String
+    ): Flow<UiState<CommonResponseModel>> = flow{
+        emit(UiState.Loading)
+        try {
+            val response = api.toggleSaveFacilityApi(id,fId)
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && body.status == true) {

@@ -10,5 +10,6 @@ data class Data(
     val answer: String? = null,
     val created_at: String? = null,
     val question: String? = null,
-    val updated_at: String? = null
+    val updated_at: String? = null,
+    val facility_list: List<Facility> = emptyList()
 )

@@ -19,5 +19,7 @@ object ApiEndPoint {
     const val VERIFY_EMAIL = "verify-email"
     const val SAVED_FACILITIES = "saved-facilities"
     const val FACILITIES_LIST = "facility-list"
+    const val TOGGLE_SAVE_FACILITY = "toggle-save-facility"
+    const val FACILITY_DETAIL = "facility-detail"
 
 }

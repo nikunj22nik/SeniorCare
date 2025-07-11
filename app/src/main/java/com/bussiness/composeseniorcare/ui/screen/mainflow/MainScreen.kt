@@ -57,7 +57,6 @@ import com.bussiness.composeseniorcare.ui.component.ErrorDialog
 import com.bussiness.composeseniorcare.ui.component.SkippedFormat
 import com.bussiness.composeseniorcare.ui.component.StatusDialog
 import com.bussiness.composeseniorcare.ui.component.bottomNavItems
-import com.bussiness.composeseniorcare.ui.component.savedFacilities
 import com.bussiness.composeseniorcare.util.ErrorMessage
 import com.bussiness.composeseniorcare.util.SessionManager
 import com.bussiness.composeseniorcare.util.UiState
@@ -229,7 +228,6 @@ fun MainScreen(authNavController: NavHostController) {
                 BottomNavGraph(
                     navController = navController,
                     authNavController = authNavController,
-                    savedFacilities = savedFacilities,
                     onOpenDrawer = { scope.launch { drawerState.open() } }
                 )
             }

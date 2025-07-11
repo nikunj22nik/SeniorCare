@@ -9,22 +9,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -55,7 +47,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.bussiness.composeseniorcare.R
-import com.bussiness.composeseniorcare.data.model.Facility
+import com.bussiness.composeseniorcare.data.model.FacilityL
+import com.bussiness.composeseniorcare.model.Facility
 import com.bussiness.composeseniorcare.navigation.Routes
 import com.bussiness.composeseniorcare.ui.theme.Purple
 import com.bussiness.composeseniorcare.ui.theme.Redish
@@ -181,13 +174,13 @@ fun CompareFacilities(
                     )
 
 
-                    FeaturedFacilityList(
-                        facilities = facilitiesList,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 15.dp),
-                        onCardClick = { navController.navigate(Routes.LISTING_DETAIL) }
-                    )
+//                    FeaturedFacilityList(
+//                        facilities = facilitiesList,
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .padding(horizontal = 15.dp),
+//                        onCardClick = { navController.navigate(Routes.LISTING_DETAIL) }
+//                    )
 
                 }
             }

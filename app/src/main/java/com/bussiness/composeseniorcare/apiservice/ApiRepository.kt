@@ -2,6 +2,7 @@ package com.bussiness.composeseniorcare.apiservice
 
 import com.bussiness.composeseniorcare.model.CommonResponseModel
 import com.bussiness.composeseniorcare.model.FAQModel
+import com.bussiness.composeseniorcare.model.FacilityListResponse
 import com.bussiness.composeseniorcare.model.LoginResponse
 import com.bussiness.composeseniorcare.model.ProfileModel
 import com.bussiness.composeseniorcare.model.Register
@@ -20,7 +21,7 @@ interface ApiRepository {
 
     fun verifyOTPApi(emailOrPhone: String, otp: String): Flow<UiState<CommonResponseModel>>
 
-    fun registerUser(@Body register: Register) :Flow<UiState<Pair<String,Int>>>
+    fun signUpApiRequest(emailOrPhone: String, password: String, deviceType: String): Flow<UiState<LoginResponse>>
 
     fun resendVerifyOTPApi(emailOrPhone: String): Flow<UiState<CommonResponseModel>>
 
@@ -45,5 +46,9 @@ interface ApiRepository {
     fun verifyEmailOtpApi(otp: String, email: String): Flow<UiState<CommonResponseModel>>
 
     fun savedFacilitiesApi(id: String): Flow<UiState<SavedFacilityModel>>
+
+    fun facilitiesListApi(id: String): Flow<UiState<FacilityListResponse>>
+
+    fun toggleSaveFacilityApi(id: String, fId: String): Flow<UiState<CommonResponseModel>>
 
 }

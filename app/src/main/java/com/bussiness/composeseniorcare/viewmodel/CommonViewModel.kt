@@ -14,7 +14,8 @@ class CommonViewModel  @Inject constructor(app: Application, private val reposit
         launchFlowWithKey("contactUs",repository.contactUsApi(name,email,phone,message))
     }
 
-//    fun faqApi(){
-//        launchFlowWithKey("faq",repository.faqApi())
-//    }
+    fun toggleSaveFacilityApi(id: String,fId: String) {
+        launchFlowWithKey("toggleSaveFacility",repository.toggleSaveFacilityApi(id,fId))
+    }
+
 }

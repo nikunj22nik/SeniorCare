@@ -1,5 +1,6 @@
 package com.bussiness.composeseniorcare.ui.screen.mainflow
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,9 +26,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +39,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -46,13 +51,24 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.bussiness.composeseniorcare.R
+import com.bussiness.composeseniorcare.model.Facility
 import com.bussiness.composeseniorcare.navigation.Routes
+import com.bussiness.composeseniorcare.ui.component.AppLoader
+import com.bussiness.composeseniorcare.ui.component.ErrorDialog
 import com.bussiness.composeseniorcare.ui.component.FilterDialog
 import com.bussiness.composeseniorcare.ui.component.SharpEdgeButton
 import com.bussiness.composeseniorcare.ui.theme.Redish
+import com.bussiness.composeseniorcare.util.ErrorMessage
+import com.bussiness.composeseniorcare.util.SessionManager
+import com.bussiness.composeseniorcare.util.UiState
+import com.bussiness.composeseniorcare.viewmodel.CommonViewModel
+import com.bussiness.composeseniorcare.viewmodel.FacilityListViewModel
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -62,6 +78,85 @@ fun FacilityListing(navController: NavHostController, onOpenDrawer: () -> Unit,t
     var priceRange by remember { mutableStateOf(5000f..100000f) }
     val amenities = listOf("WiFi", "Parking", "Gym", "Pool", "Spa", "Laundry")
     var selectedAmenities by remember { mutableStateOf(setOf<String>()) }
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+    var errorMessage by remember { mutableStateOf("") }
+    var showErrorDialog by remember { mutableStateOf(false) }
+    val facilitiesListing = remember { mutableStateListOf<Facility>() }
+    val coroutineScope  = rememberCoroutineScope()
+    //initialize viewmodel
+    val viewModel : FacilityListViewModel = hiltViewModel()
+    val toggleVieModel : CommonViewModel = hiltViewModel()
+
+    //viewmodel data
+    val state = viewModel.uiState.value
+    val toggleSavedFacility = toggleVieModel.getUiState("toggleSaveFacility").value
+
+    //api hit and data update
+    LaunchedEffect (Unit){
+        viewModel.facilityListApi(sessionManager.getUserId().toString())
+    }
+    //state manage
+    LaunchedEffect(state,toggleSavedFacility) {
+        when  {
+            state is UiState.Success -> {
+                facilitiesListing.clear()
+                facilitiesListing.addAll(state.data.data.facility_list)
+                viewModel.resetState()
+            }
+
+            state is UiState.Error -> {
+                errorMessage = state.message
+                showErrorDialog = true
+                viewModel.resetState()
+            }
+
+            state is UiState.NoInternet -> {
+                errorMessage = ErrorMessage.NO_INTERNET
+                showErrorDialog = true
+                viewModel.resetState()
+            }
+
+            toggleSavedFacility is UiState.Success -> {
+                Toast.makeText(context, "Saved Facility Updated", Toast.LENGTH_SHORT).show()
+                toggleVieModel.resetState("toggleSaveFacility")
+            }
+
+            toggleSavedFacility is UiState.Error -> {
+                errorMessage = toggleSavedFacility.message
+                showDialog = true
+                toggleVieModel.resetState("toggleSaveFacility")
+            }
+
+            toggleSavedFacility is UiState.NoInternet -> {
+                errorMessage = ErrorMessage.NO_INTERNET
+                showDialog = true
+                toggleVieModel.resetState("toggleSaveFacility")
+            }
+
+            else -> Unit
+        }
+    }
+
+    if (state is UiState.Loading || toggleSavedFacility is UiState.Loading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.3f))
+                .zIndex(1f), // to bring it on top if necessary
+            contentAlignment = Alignment.Center
+        ) {
+            AppLoader()
+        }
+    }
+
+    if (showErrorDialog) {
+        ErrorDialog(
+            message = errorMessage,
+            onConfirm = { showErrorDialog = false },
+            onDismiss = { showErrorDialog = false }
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -129,12 +224,17 @@ fun FacilityListing(navController: NavHostController, onOpenDrawer: () -> Unit,t
                     Spacer(modifier = Modifier.height(5.dp))
                 }
 
-                items(facilitiesList) { facility ->
+                items(facilitiesListing) { facility ->
                     FacilityCard(
                         facility = facility,
                         showRating = false,
                         showBookmark = true,
-                        onBookmarkClick = { },
+                        onBookmarkClick = {
+                            coroutineScope.launch {
+                                toggleVieModel.toggleSaveFacilityApi(sessionManager.getUserId()
+                                    .toString(), facility.f_id.toString()
+                                )
+                            } },
                         onCardClick = {
                             if (type == "compare"){
                                 navController.navigate(Routes.COMPARE_FACILITY)

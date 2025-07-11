@@ -3,10 +3,10 @@ package com.bussiness.composeseniorcare.ui.component
 
 
 import com.bussiness.composeseniorcare.R
-import com.bussiness.composeseniorcare.data.model.Facility
+import com.bussiness.composeseniorcare.data.model.FacilityL
 
 val savedFacilities = listOf(
-    Facility(
+    FacilityL(
         imageResId = R.drawable.banner_bg,
         name = "Premium Care Home",
         location = "New York, USA",
@@ -15,7 +15,7 @@ val savedFacilities = listOf(
         rating = "4.9",
         isBookmarked = true
     ),
-    Facility(
+    FacilityL(
         imageResId = R.drawable.banner_bg,
         name = "Sunrise Elderly",
         location = "California, USA",
@@ -24,7 +24,7 @@ val savedFacilities = listOf(
         rating = "4.7",
         isBookmarked = true
     ),
-    Facility(
+    FacilityL(
         imageResId = R.drawable.banner_bg,
         name = "Premium Care Home",
         location = "New York, USA",
@@ -33,7 +33,7 @@ val savedFacilities = listOf(
         rating = "4.9",
         isBookmarked = true
     ),
-    Facility(
+    FacilityL(
         imageResId = R.drawable.banner_bg,
         name = "Sunrise Elderly",
         location = "California, USA",
@@ -42,7 +42,7 @@ val savedFacilities = listOf(
         rating = "4.7",
         isBookmarked = true
     ),
-    Facility(
+    FacilityL(
         imageResId = R.drawable.banner_bg,
         name = "Premium Care Home",
         location = "New York, USA",
@@ -51,7 +51,7 @@ val savedFacilities = listOf(
         rating = "4.9",
         isBookmarked = true
     ),
-    Facility(
+    FacilityL(
         imageResId = R.drawable.banner_bg,
         name = "Sunrise Elderly",
         location = "California, USA",

@@ -43,6 +43,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -73,10 +74,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
+import com.bussiness.composeseniorcare.BuildConfig
 import com.bussiness.composeseniorcare.R
-import com.bussiness.composeseniorcare.data.model.Facility
+import com.bussiness.composeseniorcare.data.model.FacilityL
 import com.bussiness.composeseniorcare.data.model.PosterItem
 import com.bussiness.composeseniorcare.data.model.Provider
+import com.bussiness.composeseniorcare.model.Facility
+import com.bussiness.composeseniorcare.model.Services
 import com.bussiness.composeseniorcare.navigation.Routes
 import com.bussiness.composeseniorcare.ui.component.SharpEdgeButton
 import com.bussiness.composeseniorcare.ui.theme.Purple
@@ -88,7 +92,7 @@ val facilities = List(5) {
 }
 
 val facilitiesList = List(2) {
-    Facility(
+    FacilityL(
         imageResId = R.drawable.banner_bg, // Replace with a valid drawable
         name = "Lorem ipsum",
         location = "City, State, Country",
@@ -202,8 +206,9 @@ fun HomeScreen(authNavController: NavHostController,navController: NavHostContro
             }
 
             item {
+                var facilitiesListing = remember { mutableStateListOf<Facility>() }
                 FeaturedFacilityList(
-                    facilities = facilitiesList,
+                    facilities = facilitiesListing,
                     modifier = Modifier.fillMaxWidth(),
                     onCardClick = {
                         navController.navigate(Routes.LISTING_DETAIL )
@@ -582,13 +587,13 @@ fun FacilityCard(
     showRating: Boolean = true,
     showBookmark: Boolean = true,
     onBookmarkClick: ((Facility) -> Unit)? = null,
-    onCardClick: () -> Unit ,
+    onCardClick: () -> Unit,
     cornerRadius: Dp = 12.dp,
     cardElevation: Dp = 4.dp,
     fromTextColor: Color,
     arrowColor: Color = Purple
 ) {
-    var isBookmarked by rememberSaveable { mutableStateOf(false) }
+    var isBookmarked by rememberSaveable { mutableStateOf(facility.saved == 1) }
 
     Column(
         modifier = modifier
@@ -605,11 +610,13 @@ fun FacilityCard(
                 .fillMaxWidth()
                 .height(160.dp)) {
 
-                Image(
-                    painter = painterResource(id = facility.imageResId),
+                AsyncImage(
+                    model = facility.images.firstOrNull(),
                     contentDescription = "Facility image",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    placeholder = painterResource(R.drawable.banner_bg),
+                    error = painterResource(R.drawable.banner_bg)
                 )
 
                 // Rating badge
@@ -627,7 +634,7 @@ fun FacilityCard(
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
                             Text(
-                                text = facility.rating,
+                                text = "facility.rating",
                                 color = Color.Black,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp,
@@ -660,13 +667,16 @@ fun FacilityCard(
                         tint = Color.Unspecified
                     )
                 }
+
+
             }
         }
 
         Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)) {
-            FacilityTextHeading(facility.name)
+            FacilityTextHeading(facility.facility_name)
             FacilityTitleText("Location : ", facility.location)
-            FacilityTitleText("Services : ", facility.services)
+            FacilityTitleText("Services : ", facility.services.getActiveServices())
+
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -813,6 +823,17 @@ fun ProviderCard(
         }
     }
 }
+
+fun Services.getActiveServices(): String {
+    val activeServices = mutableListOf<String>()
+
+    if (memory_care == 1) activeServices.add("Memory Care")
+    if (assisted_living == 1) activeServices.add("Assisted Living")
+    if (independent_living == 1) activeServices.add("Independent Living")
+
+    return activeServices.joinToString(", ")
+}
+
 
 @Composable
 fun InfoRow(label: String, value: String) {
